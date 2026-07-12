@@ -1,0 +1,55 @@
+# Foundation validation evidence - 2026-07-12
+
+Scope:
+- Task 01 only: dependencies, environment validation, Supabase server/proxy/admin boundaries, Next.js proxy foundation, test runner, required script entry points, and broken starter-page cleanup.
+
+Official documentation checked:
+- Next.js `proxy.ts` file convention and matcher guidance: https://nextjs.org/docs/app/api-reference/file-conventions/proxy
+- Supabase SSR Next.js client guidance: https://supabase.com/docs/guides/auth/server-side/nextjs
+- Supabase JavaScript client initialization: https://supabase.com/docs/reference/javascript/initializing
+
+Dependencies added:
+- `@supabase/supabase-js`: Supabase client creation.
+- `@supabase/ssr`: cookie-bound SSR/proxy Supabase client.
+- `server-only`: privileged module import protection.
+- `zod`: runtime environment validation.
+- `vitest`: test runner foundation.
+- `tsx`: TypeScript script entry points.
+- `dotenv`: explicit script env loader for later phases.
+
+Files changed or added:
+- `package.json`, `package-lock.json`
+- `.env.example`, `.gitignore`
+- `src/lib/env/public.ts`, `src/lib/env/server.ts`
+- `src/lib/supabase/server.ts`, `src/lib/supabase/proxy.ts`, `src/lib/supabase/admin.ts`
+- `proxy.ts`
+- `vitest.config.ts`, `tests/foundation.test.ts`
+- `scripts/seed.ts`, `scripts/sync-invoices.ts`, `scripts/verify-rls.ts`, `scripts/verify-sync.ts`, `scripts/check-secrets.ts`
+- `src/app/page.tsx`, `src/app/globals.css`
+- `.agent/exec-plans/active/001-easypass-take-home.md`, `NOTES.md`, `evidence/foundation-validation.txt`
+
+Security and data-integrity review:
+- No browser Supabase client was created because no real Client Component needs it in Task 01.
+- Authenticated server client uses public Supabase env values and Next.js cookies so future user paths preserve JWT/RLS behavior.
+- Privileged client is lazy, imports `server-only`, uses only `SUPABASE_SERVICE_ROLE_KEY`, and disables auth persistence, auto-refresh, and URL session detection.
+- Public and server env variables are parsed separately; server secrets are only read by the server env module.
+- `proxy.ts` refreshes Supabase session cookies and calls `auth.getClaims()`; it is session plumbing only, not an authorization boundary.
+- `.env.example` contains placeholders only. `.gitignore` keeps real `.env*` files ignored but allows `.env.example` to be tracked. No migrations, tables, RLS, product UI, seed data, or invoice writes were added.
+
+Commands and outcomes:
+- `npm install @supabase/supabase-js @supabase/ssr server-only zod; npm install -D vitest tsx dotenv`: sandbox run failed with npm registry cache errors; approved rerun passed and updated lockfile. npm reported 2 moderate vulnerabilities.
+- `npm ls --depth=0`: after install, required dependencies appeared. Optional native/wasm packages such as `@emnapi/runtime` still appeared as extraneous in `node_modules`; npm also warned that cleanup of an optional `@unrs` path hit `EPERM`. No manual cleanup was done.
+- `npm run lint`: passed.
+- `npm run typecheck`: passed.
+- `npm test`: sandbox run failed with Vite/Rolldown `spawn EPERM`; approved rerun passed with 1 test file and 1 test.
+- `npm run build`: sandbox run failed with `EPERM` unlinking `.next/app-path-routes-manifest.json`; approved rerun passed.
+- `npm run verify:rls`: sandbox run failed with `tsx`/esbuild `spawn EPERM`; approved rerun executed placeholder: Task 02 will implement real checks.
+- `npm run verify:sync`: sandbox run failed with `tsx`/esbuild `spawn EPERM`; approved rerun executed placeholder: Task 04 will implement real checks.
+- `npm run check:secrets`: sandbox run failed with `tsx`/esbuild `spawn EPERM`; approved rerun executed placeholder: Task 05 will implement final release scanning.
+- `git diff --check`: passed.
+
+Known limitations and unresolved risks:
+- `verify:rls`, `verify:sync`, `seed`, `sync:invoices`, and `check:secrets` are entry-point placeholders only and are not acceptance evidence.
+- Database schema, grants, RLS, seed users, auth UI, protected pages, service requests, invoice sync, and real verification remain later tasks.
+- npm audit reported 2 moderate vulnerabilities after adding required dependencies; not remediated in Task 01.
+- Local `node_modules` still has extraneous optional native/wasm packages after npm install. Repository metadata was updated through npm only, with no unsafe manual lockfile edits.

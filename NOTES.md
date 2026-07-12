@@ -112,3 +112,34 @@ Evidence:
 
 Limitation:
 - Full application, Supabase schema/RLS, sync, seed, and final acceptance scripts are not implemented yet.
+
+## Task 01 foundation - 2026-07-12
+
+Prompt/task:
+- Execute `tasks/01-foundation-and-clients.md` after Task 00, with official Next.js/Supabase docs checked for version-sensitive proxy and SSR client APIs.
+
+Actions:
+- Installed `@supabase/supabase-js`, `@supabase/ssr`, `server-only`, `zod`, `vitest`, `tsx`, and `dotenv` through npm.
+- Added `.env.example` with placeholders only and updated `.gitignore` so it is not ignored.
+- Added lazy public/server env parsing and Supabase authenticated server, proxy refresh, and privileged server-only clients.
+- Added root `proxy.ts` for Next.js 16 session refresh plumbing.
+- Added Vitest config, a foundation harness test, and required package script entry points.
+- Replaced the broken starter root page with a minimal temporary foundation page.
+
+Verification:
+- `npm run lint`: passed.
+- `npm run typecheck`: passed.
+- `npm test`: sandbox run failed with `spawn EPERM`; approved rerun passed, 1 test file and 1 test.
+- `npm run build`: sandbox run failed unlinking `.next/app-path-routes-manifest.json`; approved rerun passed.
+- `npm run verify:rls`: sandbox run failed with `tsx`/esbuild `spawn EPERM`; approved rerun executed placeholder.
+- `npm run verify:sync`: sandbox run failed with `tsx`/esbuild `spawn EPERM`; approved rerun executed placeholder.
+- `npm run check:secrets`: sandbox run failed with `tsx`/esbuild `spawn EPERM`; approved rerun executed placeholder.
+- `git diff --check`: passed.
+
+Evidence:
+- `evidence/foundation-validation.txt`
+
+Limitations:
+- RLS, seed data, auth UI, service requests, invoice sync, real RLS/sync verification, and final secret scan remain unimplemented. Placeholder script success is not acceptance proof.
+- npm reported 2 moderate audit findings after dependency installation.
+- `npm ls --depth=0` still reports optional native/wasm packages such as `@emnapi/runtime` as extraneous in `node_modules`; no manual lockfile or install-tree cleanup was performed.

@@ -60,12 +60,12 @@ Actual start: 2026-07-12T12:31:00+05:30
 Task 00 inspection stop: 2026-07-12T12:59:59+05:30
 Task 00 active time: about 29 minutes
 Actual stop:
-Actual active time so far: about 29 minutes
+Actual active time so far: about 79 minutes
 
 ## Progress
 
 - [x] Task 00 - Inspect and validate plan/traceability.
-- [ ] Task 01 - Foundation, dependencies, environment, Supabase clients.
+- [x] Task 01 - Foundation, dependencies, environment, Supabase clients.
 - [ ] Task 02 - Schema, grants, RLS, seed, RLS verification.
 - [ ] Task 03 - Authentication and request application.
 - [ ] Task 04 - Mock ERP and invoice synchronization.
@@ -80,8 +80,8 @@ Record actual findings here. Do not invent an AI mistake in advance.
 - `npm install` and one `npm run build` attempt hit Windows/sandbox `EPERM` issues; rerunning those exact commands with approval passed.
 - Task 00 inspection on 2026-07-12 found the repository at scaffold-only state: EasyPass v3 harness, docs, task files, active plan, fixture, evidence bootstrap note, and minimal Next.js app/config exist; no Supabase integration, migrations, seed, auth pages/actions, product UI, scripts, tests, `.env.example`, or invoice sync exist.
 - Current installed top-level versions from `npm ls --depth=0`: Next.js 16.2.10, React 19.2.4, React DOM 19.2.4, TypeScript 5.9.3, ESLint 9.39.5, eslint-config-next 16.2.10, `@types/node` 20.19.43, `@types/react` 19.2.17, `@types/react-dom` 19.2.3. `@emnapi/runtime@1.11.2` appears extraneous.
-- Current package scripts are only `dev`, `build`, `start`, `lint`, and `typecheck`; required `test`, `seed`, `sync:invoices`, `verify:rls`, `verify:sync`, `check:secrets`, and `verify` scripts are not present yet.
-- Starter/demo files to replace or remove later: `src/app/page.tsx` still contains create-next-app demo content and imports missing `./page.module.css`; it also references `/next.svg` and `/vercel.svg`, but no `public/` assets are present. `src/app/globals.css` is generic scaffold styling. `next.config.ts` is empty scaffold config.
+- Task 00 found package scripts only included `dev`, `build`, `start`, `lint`, and `typecheck`; Task 01 added the required script entry points. Later-phase verification scripts are placeholders until their implementation tasks.
+- Task 00 found the starter page was broken by missing `page.module.css`, `/next.svg`, and `/vercel.svg`; Task 01 replaced it with a minimal temporary foundation page and scoped CSS. `next.config.ts` remains the empty scaffold config because no Task 01 option is needed.
 - Existing `fixtures/mock-erp-invoices.json` is present and contains the canonical eight mock ERP invoices; it must remain unchanged during Task 04 except for verification that route/adapter serve it exactly.
 - Task 01 expected dependencies: `@supabase/supabase-js` and `@supabase/ssr` for authenticated SSR and privileged server clients; `server-only` to guard privileged imports; `zod` for env/form/external runtime validation; `vitest` for unit tests; `tsx` for TypeScript scripts; `dotenv` or equivalent explicit env loader for scripts. Avoid ORM, global state, form framework, query library, component system, and job framework.
 - Expected Task 01 files: `.env.example`, package scripts/dependencies, `src/lib/env/public.ts`, `src/lib/env/server.ts`, `src/lib/supabase/server.ts`, `src/lib/supabase/proxy.ts`, `src/lib/supabase/admin.ts`, root `proxy.ts`, Vitest config/setup as needed, and placeholder script entry points only where required to keep named commands available without implementing later behavior.
@@ -92,6 +92,14 @@ Record actual findings here. Do not invent an AI mistake in advance.
 - Version-sensitive APIs requiring official-doc verification before implementation: Next.js 16 `proxy.ts` file convention, matcher syntax, Server Actions/revalidate behavior, App Router redirects/notFound; Supabase `@supabase/ssr` cookie API with Next.js async cookies, `auth.getClaims()`, service-role client options and key naming; Supabase/PostgREST column grants/RPC execution behavior; PostgreSQL 18 RLS policy/default-deny/security-definer/search-path behavior and `INSERT ... ON CONFLICT DO UPDATE ... WHERE` semantics. Task 00 checked official Next.js, Supabase, and PostgreSQL docs; apply the exact current examples during implementation.
 - Official reference check notes: Next.js docs report latest version 16.2.10 and confirm `middleware` is deprecated in favor of `proxy.ts`, with static matcher constants and negative matching for assets; Supabase docs confirm `auth.getClaims()` verifies JWT claims and is preferred over `getUser` when JWKS can be used; PostgreSQL docs confirm RLS default-deny when enabled without policies and `ON CONFLICT DO UPDATE ... WHERE` atomic upsert behavior with skipped rows not returned.
 - No contradiction requiring a `Proposed` decision was found during Task 00. Current blockers are implementation absence only: Task 01 must add required dependencies/config/scripts/env/Supabase boundaries, and the starter page currently cannot be treated as product UI.
+- Task 01 completed on 2026-07-12T13:22:24+05:30. Added `@supabase/supabase-js`, `@supabase/ssr`, `server-only`, `zod`, `vitest`, `tsx`, and `dotenv`; npm reported 2 moderate audit findings after install, not addressed in this task because no safe non-breaking fix was requested or required by the Task 01 contract.
+- Added separate lazy env readers in `src/lib/env/public.ts` and `src/lib/env/server.ts`. Server env imports `server-only`; no module parses secrets at import time.
+- Added authenticated cookie-bound server Supabase client in `src/lib/supabase/server.ts`, proxy refresh helper in `src/lib/supabase/proxy.ts`, root `proxy.ts`, and service-role-only lazy admin client in `src/lib/supabase/admin.ts`. No browser Supabase client was created because Task 01 has no real Client Component requiring it.
+- Added required package script entry points. `verify:rls`, `verify:sync`, `seed`, `sync:invoices`, and `check:secrets` are explicit placeholders for later tasks and must not be treated as acceptance proof yet.
+- Replaced broken starter root page with a minimal static foundation page and removed missing `page.module.css`, `/next.svg`, and `/vercel.svg` dependencies without adding product UI.
+- `npm ls --depth=0` still reports optional native/wasm packages such as `@emnapi/runtime` as extraneous in `node_modules` after npm install. The lockfile and package metadata were updated only through npm; no manual cleanup was done because this appears to be a local install-tree artifact and npm also warned about an EPERM cleanup path under `@unrs/resolver-binding-wasm32-wasi`.
+- Task 01 validation: `npm run lint` passed; `npm run typecheck` passed; `npm test` initially failed with sandbox `spawn EPERM` then passed with approval; `npm run build` initially failed with sandbox/OneDrive `.next` unlink `EPERM` then passed with approval; `npm run verify:rls`, `npm run verify:sync`, and `npm run check:secrets` initially hit `tsx`/esbuild `spawn EPERM` then placeholder commands passed with approval; `git diff --check` passed.
+- Task 01 added `!.env.example` to `.gitignore` so the required placeholder env file is commit-visible while real `.env*` files remain ignored.
 
 ## Milestones
 
@@ -112,6 +120,24 @@ Actual proof:
 - no unresolved critical architecture decision found.
 
 ### Task 01 - Foundation
+
+Actual:
+
+- Installed required foundation dependencies and dev tooling with npm-managed lockfile updates.
+- Added placeholder-only environment example, lazy public/server env parsing, authenticated server/proxy Supabase clients, and server-only privileged client.
+- Added Next.js 16 root `proxy.ts` session-refresh foundation.
+- Added Vitest config and one foundation harness test.
+- Added required package script entry points, with later-phase scripts explicitly placeholder-only.
+- Cleaned broken create-next-app starter page into a minimal compiling temporary page.
+
+Proof:
+
+- `evidence/foundation-validation.txt`
+- `npm run lint` passed.
+- `npm run typecheck` passed.
+- `npm test` passed after approved rerun for sandbox `spawn EPERM`.
+- `npm run build` passed after approved rerun for `.next` cleanup `EPERM`.
+- `git diff --check` passed.
 
 Expected files:
 
@@ -215,9 +241,9 @@ Manual:
 
 Complete during development:
 
-- Delivered behavior:
-- Evidence paths: `evidence/bootstrap-foundation.txt`
-- AI error caught:
-- Durable correction:
-- Known limitations:
+- Delivered behavior: Task 01 foundation, env validation boundaries, Supabase server/proxy/admin clients, required scripts, test runner, and temporary compiling root page are in place.
+- Evidence paths: `evidence/bootstrap-foundation.txt`, `evidence/foundation-validation.txt`
+- AI error caught: None requiring a contract change. The local tool editor failed under the Windows sandbox, so the same planned edits were applied with a repository-local script; validation caught no behavior drift.
+- Durable correction: Keep using npm for lockfile/dependency changes; do not manually clean extraneous optional native packages from `node_modules`.
+- Known limitations: Database/RLS/seed, auth UI, service-request behavior, invoice sync, real RLS verification, real sync verification, and final secret scan remain later tasks. `verify:rls`, `verify:sync`, and `check:secrets` are placeholders only. npm audit reports 2 moderate findings.
 - Production escalation:
