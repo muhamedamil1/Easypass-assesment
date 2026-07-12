@@ -1,0 +1,24 @@
+# Bootstrap evidence - 2026-07-12
+
+Context:
+- Direct command failed: npx create-next-app@latest .
+- Reason: repository already contained assessment files (.agent, docs/evidence/fixtures/tasks, AGENTS.md, HARNESS.md, NOTES.md, SETUP.md).
+
+Action:
+- Read docs/PRODUCT.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, docs/IMPLEMENTATION.md, and .agent/PLANS.md.
+- Scaffolded official Next.js template in C:\tmp\easypass-next-scaffold with:
+  npx create-next-app@latest C:\tmp\easypass-next-scaffold --ts --eslint --src-dir --app --use-npm --no-tailwind --import-alias "@/*" --yes
+- Copied generated app/config files into the repository root without copying scaffold AGENTS.md, CLAUDE.md, .git, .next, or node_modules.
+- Renamed package to easypass-assesment.
+- Added npm run typecheck.
+- Removed next/font/google usage from src/app/layout.tsx because offline builds could not fetch Google Fonts.
+
+Commands and outcomes:
+- npm install: initial sandbox run failed with EPERM during package install script spawn; rerun with approval passed.
+- npm run lint: passed.
+- npm run typecheck: passed.
+- npm run build: first post-font-fix sandbox run failed with EPERM unlinking .next diagnostics; rerun with approval passed.
+- git diff --check: passed.
+
+Scope note:
+- This is only foundation/bootstrap proof. Full EasyPass acceptance checks are not implemented yet: npm test, verify:rls, verify:sync, check:secrets.

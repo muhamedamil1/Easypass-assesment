@@ -43,41 +43,43 @@ Excluded until required checks pass:
 
 ## Time budget
 
-Target total active work: 4–6 hours.
+Target total active work: 4â€“6 hours.
 
 Suggested guardrails:
 
-- Task 00 inspection/plan: 15–20 min
-- Task 01 foundation/clients: 30–40 min
-- Task 02 database/RLS/seed: 75–90 min
-- Task 03 auth/request app: 75–90 min
-- Task 04 invoice sync: 60–75 min
-- Task 05 audit/docs/final evidence: 45–60 min
+- Task 00 inspection/plan: 15â€“20 min
+- Task 01 foundation/clients: 30â€“40 min
+- Task 02 database/RLS/seed: 75â€“90 min
+- Task 03 auth/request app: 75â€“90 min
+- Task 04 invoice sync: 60â€“75 min
+- Task 05 audit/docs/final evidence: 45â€“60 min
 
 When time is exhausted, stop optional work, preserve proof, and document unfinished items honestly.
 
-Actual start:
+Actual start: 2026-07-12T12:31:00+05:30
 Actual stop:
 Actual active time:
 
 ## Progress
 
-- [ ] Task 00 — Inspect and validate plan/traceability.
-- [ ] Task 01 — Foundation, dependencies, environment, Supabase clients.
-- [ ] Task 02 — Schema, grants, RLS, seed, RLS verification.
-- [ ] Task 03 — Authentication and request application.
-- [ ] Task 04 — Mock ERP and invoice synchronization.
-- [ ] Task 05 — Adversarial release audit, documentation, and evidence.
+- [~] Task 00 â€” Inspect and validate plan/traceability.
+- [~] Task 01 â€” Foundation, dependencies, environment, Supabase clients.
+- [ ] Task 02 â€” Schema, grants, RLS, seed, RLS verification.
+- [ ] Task 03 â€” Authentication and request application.
+- [ ] Task 04 â€” Mock ERP and invoice synchronization.
+- [ ] Task 05 â€” Adversarial release audit, documentation, and evidence.
 
 ## Decisions and discoveries
 
 Record actual findings here. Do not invent an AI mistake in advance.
 
-- None yet.
+- Direct `npx create-next-app@latest .` cannot run in the assessment root because the repository already contains required harness files. Used a temporary scaffold at `C:\tmp\easypass-next-scaffold` and copied only generated app/config files into root.
+- The generated `next/font/google` imports made `npm run build` depend on fetching Google Fonts. Removed those imports from `src/app/layout.tsx` so the baseline build is reproducible offline.
+- `npm install` and one `npm run build` attempt hit Windows/sandbox `EPERM` issues; rerunning those exact commands with approval passed.
 
 ## Milestones
 
-### Task 00 — Inspection and plan confirmation
+### Task 00 â€” Inspection and plan confirmation
 
 Expected:
 
@@ -92,7 +94,7 @@ Proof:
 - traceability remains complete;
 - no unresolved critical architecture decision.
 
-### Task 01 — Foundation
+### Task 01 â€” Foundation
 
 Expected files:
 
@@ -108,7 +110,7 @@ Proof:
 - lint, typecheck, test runner, and build execute;
 - no product behavior or secret committed.
 
-### Task 02 — Database and RLS
+### Task 02 â€” Database and RLS
 
 Expected files:
 
@@ -123,7 +125,7 @@ Proof:
 - all access-matrix integration checks pass with real user sessions;
 - invoice/user access defaults closed.
 
-### Task 03 — Required application
+### Task 03 â€” Required application
 
 Expected:
 
@@ -140,7 +142,7 @@ Proof:
 - no normal path imports privileged client;
 - build/static checks pass.
 
-### Task 04 — Invoice sync
+### Task 04 â€” Invoice sync
 
 Expected:
 
@@ -157,7 +159,7 @@ Proof:
 - second run affects zero;
 - stale/conflict/unmatched tests pass without partial writes.
 
-### Task 05 — Release proof
+### Task 05 â€” Release proof
 
 Expected:
 
@@ -197,7 +199,7 @@ Manual:
 Complete during development:
 
 - Delivered behavior:
-- Evidence paths:
+- Evidence paths: `evidence/bootstrap-foundation.txt`
 - AI error caught:
 - Durable correction:
 - Known limitations:
