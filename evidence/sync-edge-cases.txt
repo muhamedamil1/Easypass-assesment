@@ -1,0 +1,8 @@
+PASS stale input affects 0 rows
+PASS stale input cannot roll newer data backward
+PASS equal-timestamp conflicting input is rejected
+PASS conflict failure creates no partial writes
+PASS unmatched company input is rejected
+PASS unmatched failure creates no partial writes
+PASS unique source/external_id count remains 6
+Result: PASS (all sync assertions passed)

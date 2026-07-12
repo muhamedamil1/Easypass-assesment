@@ -1,0 +1,9 @@
+Sync verification for EasyPass Task 04
+Resetting mock-erp invoices before first run
+first result: received=8 unique=6 affected=6 final=6
+PASS first run receives 8 source objects
+PASS first run reduces to 6 invoice identities
+PASS first run affects 6 rows
+PASS first run final count is 6
+PASS INV-2026-002 ends paid with June 15 timestamp
+PASS INV-2026-005 ends AED 1049.99 with June 16 timestamp

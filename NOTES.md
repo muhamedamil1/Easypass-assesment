@@ -19,7 +19,7 @@ Tool: Codex
 | Planning |  |  |  |
 | Database/RLS |  |  |  |
 | App |  |  |  |
-| Sync |  |  |  |
+| Sync | Execute `tasks/04-invoice-sync.md` after Task 03; preserve existing invoices schema and `sync_invoices(jsonb)` RPC. | Use runtime validation/reduction before the trusted RPC; keep sync CLI-only and invoice UI out of scope. | Reviewed generated evidence and required final counters. |
 | Audit |  |  |  |
 
 ## AI error and durable correction
@@ -55,25 +55,34 @@ Summarize actual results and link evidence/rls-verification.txt.
 First run:
 
 ```text
-Add actual received/unique/affected/final count and evidence path.
+Command: npm run verify:sync
+Observed: received=8, unique=6, affected=6, finalInvoiceCount=6.
+Evidence: evidence/sync-run-1.txt
 ```
 
 Second identical run:
 
 ```text
-Add actual affected/final count and evidence path.
+Command: npm run verify:sync
+Observed: received=8, unique=6, affected=0, finalInvoiceCount=6; stored business/source/sync timestamps unchanged.
+Evidence: evidence/sync-run-2.txt
 ```
 
 Latest-version assertions:
 
 ```text
-Add actual INV-2026-002 and INV-2026-005 values.
+INV-2026-002: paid, source_updated_at=2026-06-15T09:00:00+00:00.
+INV-2026-005: amount_aed=1049.99, source_updated_at=2026-06-16T13:40:00+00:00.
 ```
 
 Stale/conflict/unmatched assertions:
 
 ```text
-Add actual results and evidence path.
+Stale input affected 0 rows and did not roll INV-2026-005 backward.
+Equal-timestamp conflicting input was rejected with CONFLICTING_SOURCE_VERSIONS before RPC writes.
+Unmatched company input was rejected with UNMATCHED_COMPANY through the RPC boundary.
+Conflict and unmatched failures left count/data unchanged; no partial writes.
+Evidence: evidence/sync-edge-cases.txt
 ```
 
 ## Production escalation question
@@ -246,3 +255,31 @@ Browser smoke status:
 - Local dev-server launch required approval because sandboxed `Start-Process` was denied.
 - After approved launch, the `agent-browser` CLI was not available on PATH and the Node REPL browser fallback failed with a tool metadata error, so automated browser smoke was not completed in this run.
 - Exact manual smoke steps were recorded in `evidence/task03-manual-smoke.txt`.
+- User later confirmed the manual two-user browser smoke passed for admin Falcon-only access/create/update, viewer Falcon read-only plus Oasis admin create/update, sign-out, hidden Marina, and unauthorized direct company URL no-data behavior.
+## Task 04 invoice sync - 2026-07-12
+
+Prompt/task:
+- Execute `tasks/04-invoice-sync.md` after Task 03, preserving the existing invoices table and trusted `public.sync_invoices(jsonb)` function unless a reproducible defect was found.
+
+Actions:
+- Added `GET /api/mock-erp/invoices` to serve the canonical fixture unchanged.
+- Added fixture loading, Zod runtime ERP envelope/invoice validation, at-most-two-decimal amount validation, deterministic duplicate reduction, equal-timestamp conflict rejection, and a testable sync service.
+- Replaced placeholder `sync:invoices` and `verify:sync` scripts with real trusted service-role CLI paths that call the existing database RPC.
+- Added unit tests for schema validation, duplicate reduction, conflict rejection, and sync-service orchestration.
+- Wrote sanitized sync evidence to `evidence/sync-run-1.txt`, `evidence/sync-run-2.txt`, and `evidence/sync-edge-cases.txt`.
+
+Security/data review:
+- Invoice identity remains `(source, external_id)`.
+- The existing database function remains the transaction boundary and enforces strictly-newer `source_updated_at` updates.
+- Payload order is not used as a winner; equal timestamp with conflicting business data rejects the batch.
+- Company resolution remains normalized exact-name matching in PostgreSQL; no fuzzy matching or automatic company creation was added.
+- Invalid/conflicting input stops before RPC; unmatched input raises through the RPC before persistence; failed edge cases produced no partial writes.
+- Privileged credentials are loaded only in trusted scripts; no public privileged sync HTTP endpoint or invoice UI was added.
+
+Verification:
+- `npm run sync:invoices`: passed; current idempotent run emitted received=8, unique=6, affected=0, finalInvoiceCount=6 because the six latest rows already existed.
+- `npm run verify:sync`: passed after reset-first sequential run; first run affected 6 and final count 6; second run affected 0 and final count 6; stale/conflict/unmatched checks passed.
+- Unit tests passed after approved rerun because sandboxed Vitest hit Windows `spawn EPERM` before loading tests.
+
+Important correction:
+- One attempted parallel run of `npm run sync:invoices` and `npm run verify:sync` made the verifier's reset-first assertion observe rows inserted by the concurrent standalone sync, producing a false affected=0 first-run failure. The commands were rerun sequentially and passed; do not run those two sync commands concurrently against the same `mock-erp` source during verification.

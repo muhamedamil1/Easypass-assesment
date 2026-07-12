@@ -1,0 +1,6 @@
+second result: received=8 unique=6 affected=0 final=6
+PASS second run receives 8 source objects
+PASS second run reduces to 6 invoice identities
+PASS second identical run affects 0 rows
+PASS second identical run final count remains 6
+PASS second identical run does not alter stored business/source/sync timestamps

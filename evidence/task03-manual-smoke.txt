@@ -1,6 +1,6 @@
 Task 03 manual browser smoke steps
 
-Status: exact steps provided; automated browser execution was blocked by unavailable browser tooling in this run.
+Status: exact steps provided; manual browser execution was later completed by the user.
 
 Prerequisites:
 - `.env.local` contains the hosted Supabase URL, publishable key, service-role key, and seeded passwords.
@@ -42,28 +42,25 @@ Viewer account smoke:
 Task 03 manual smoke
 Date: 2026-07-12
 Environment: local Next.js + hosted Supabase
+Result source: user-confirmed manual browser run
 
 Admin account
-PASS - login succeeded
 PASS - Falcon visible
 PASS - Oasis and Marina hidden
-PASS - request creation succeeded
-PASS - status update succeeded
-PASS - direct Oasis URL exposed no data
-PASS - sign-out succeeded
+PASS - Falcon request creation works
+PASS - Falcon status update works
+PASS - sign-out works
+PASS - unauthorized direct company URL reveals no data
 
-Viewer/Oasis-admin account
-PASS - login succeeded
-PASS - Falcon and Oasis visible
+Viewer account
+PASS - Falcon visible as viewer
+PASS - Oasis visible as admin
 PASS - Marina hidden
-PASS - Falcon rendered read-only
-PASS - Oasis request creation succeeded
-PASS - Oasis status update succeeded
-PASS - direct Marina URL exposed no data
-PASS - sign-out succeeded
+PASS - Falcon write controls absent
+PASS - Oasis create/update works
+PASS - sign-out works
+PASS - unauthorized direct company URL reveals no data
 
-Validation
-PASS - empty title rejected
-PASS - invalid UUID returned not found
-PASS - no browser console errors
-PASS - no secrets or raw database errors exposed
+Both users
+PASS - sign-out works
+PASS - unauthorized direct company URL reveals no data

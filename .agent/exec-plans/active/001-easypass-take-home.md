@@ -68,7 +68,7 @@ Actual active time so far: about 79 minutes
 - [x] Task 01 - Foundation, dependencies, environment, Supabase clients.
 - [x] Task 02 - Schema, grants, RLS, seed, RLS verification.
 - [x] Task 03 - Authentication and request application.
-- [ ] Task 04 - Mock ERP and invoice synchronization.
+- [x] Task 04 - Mock ERP and invoice synchronization.
 - [ ] Task 05 - Adversarial release audit, documentation, and evidence.
 
 ## Decisions and discoveries
@@ -110,6 +110,11 @@ Record actual findings here. Do not invent an AI mistake in advance.
 - Task 03 Server Actions independently call `auth.getClaims()`, parse FormData with Zod, force `created_by` from claims, force new request status to `submitted`, update only `service_requests.status`, and revalidate the affected company path after successful mutations.
 - Task 03 did not change migrations, grants, RLS policies, seed identities, invoice permissions, or the trusted sync function. `npm run verify:rls` still passes against the hosted Supabase project.
 - Browser smoke automation was attempted but blocked: sandboxed `Start-Process` was denied, approved dev-server launch did not leave a reachable localhost server, `agent-browser` was not on PATH, and the Node REPL browser fallback failed with a tool metadata error. Exact two-user manual smoke steps were recorded in `evidence/task03-manual-smoke.txt`.
+- User-confirmed manual two-user browser smoke on 2026-07-12 passed for admin Falcon-only access/create/update, viewer Falcon read-only plus Oasis admin create/update, sign-out, hidden Marina, and unauthorized direct company URL no-data behavior.
+- Task 04 completed on 2026-07-12T16:20:00+05:30. Added the read-only mock ERP route, fixture adapter, runtime invoice validation, deterministic duplicate reduction, trusted sync service/script, real sync verifier, unit tests, and sanitized sync evidence.
+- Task 04 preserved `fixtures/mock-erp-invoices.json`, the invoices table schema, and the existing `public.sync_invoices(jsonb)` database function. No invoice UI, scheduler, webhook, queue, retry worker, public privileged sync endpoint, fuzzy matching, automatic company creation, or normal-user RLS change was added.
+- Task 04 sync proof: `npm run verify:sync` resets `mock-erp` invoice rows, imports 8 source objects, reduces to 6 identities, stores 6 rows, verifies `INV-2026-002` as paid at `2026-06-15T09:00:00+00:00`, verifies `INV-2026-005` as AED 1049.99 at `2026-06-16T13:40:00+00:00`, reruns identically with affected 0 and final count 6, rejects equal-timestamp conflicts, rejects unmatched-company batches, and confirms failed edge cases create no partial writes.
+- During Task 04, running `npm run sync:invoices` and `npm run verify:sync` in parallel once caused the verifier's reset-first run to observe rows inserted by the concurrent sync and report affected 0. Sequential rerun passed; future sync verification should not be run concurrently with standalone sync because both intentionally operate on `source = mock-erp` invoice rows.
 ## Milestones
 
 ### Task 00 - Inspection and plan confirmation
@@ -207,9 +212,10 @@ Expected:
 
 Proof:
 
-- six correct final rows;
-- second run affects zero;
-- stale/conflict/unmatched tests pass without partial writes.
+- `GET /api/mock-erp/invoices` returns the canonical fixture;
+- `npm run sync:invoices` is a real trusted service-role CLI path and logs one sanitized structured event;
+- `npm run verify:sync` passed sequentially with first-run, second-run, stale, equal-timestamp conflict, unmatched-company, no-partial-write, and unique-identity assertions;
+- unit tests cover schema validation, decimal/timestamp/string/status rejection, duplicate reduction, equal-timestamp conflicts, and sync-service RPC orchestration.
 
 ### Task 05 - Release proof
 
@@ -250,9 +256,9 @@ Manual:
 
 Complete during development:
 
-- Delivered behavior: Task 01 foundation, env validation boundaries, Supabase server/proxy/admin clients, required scripts, test runner, and temporary compiling root page are in place. Task 02 database schema, grants, RLS, seed, and authenticated RLS proof are also in place.
-- Evidence paths: `evidence/bootstrap-foundation.txt`, `evidence/foundation-validation.txt`, `evidence/rls-verification.txt`
+- Delivered behavior: Task 01 foundation, Task 02 database/RLS/seed, Task 03 auth/request app, and Task 04 mock ERP invoice sync are in place with objective verification evidence.
+- Evidence paths: `evidence/bootstrap-foundation.txt`, `evidence/foundation-validation.txt`, `evidence/rls-verification.txt`, `evidence/sync-run-1.txt`, `evidence/sync-run-2.txt`, `evidence/sync-edge-cases.txt`
 - AI error caught: None requiring a contract change. The local tool editor failed under the Windows sandbox, so the same planned edits were applied with a repository-local script; validation caught no behavior drift.
 - Durable correction: Keep using npm for lockfile/dependency changes; do not manually clean extraneous optional native packages from `node_modules`.
-- Known limitations: Invoice sync, real sync verification, final secret scan, and an executed browser smoke remain later tasks. `verify:sync` and `check:secrets` are placeholders only. npm audit reports 2 moderate findings.
+- Known limitations: final release audit, README completion, final secret scan, and automated browser smoke remain later tasks. `check:secrets` is still a placeholder until Task 05. npm audit reports 2 moderate findings.
 - Production escalation:
