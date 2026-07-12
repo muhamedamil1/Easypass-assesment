@@ -1,0 +1,39 @@
+Task 03 manual browser smoke steps
+
+Status: exact steps provided; automated browser execution was blocked by unavailable browser tooling in this run.
+
+Prerequisites:
+- `.env.local` contains the hosted Supabase URL, publishable key, service-role key, and seeded passwords.
+- `npm run verify:rls` passes before the browser smoke.
+- Start the app with `npm run dev` and open the printed localhost URL.
+
+Admin account smoke:
+1. Open `/login`.
+2. Sign in as `admin@easypass.test` with the local `SEED_ADMIN_PASSWORD` value.
+3. Confirm the app lands on `/companies`.
+4. Confirm only `Falcon Trading LLC` is listed.
+5. Confirm Falcon shows role `admin`.
+6. Open Falcon's request page.
+7. Confirm existing Falcon requests are visible.
+8. Create a request with a short unique title.
+9. Confirm the created request appears on the Falcon page.
+10. Change that request status to `completed`.
+11. Confirm the status updates on the page.
+12. Sign out and confirm `/login` is shown.
+
+Viewer account smoke:
+1. Open `/login`.
+2. Sign in as `viewer@easypass.test` with the local `SEED_VIEWER_PASSWORD` value.
+3. Confirm the app lands on `/companies`.
+4. Confirm `Falcon Trading LLC` is listed with role `viewer`.
+5. Confirm `Oasis Foods FZE` is listed with role `admin`.
+6. Confirm `Marina Tech DMCC` is not listed.
+7. Open Falcon's request page.
+8. Confirm Falcon requests are visible and the page says the company is read-only.
+9. Confirm no create-request form or status save controls are shown for Falcon.
+10. Open Oasis's request page.
+11. Confirm create-request and status controls are shown.
+12. Create an Oasis request and update its status.
+13. Navigate directly to `/companies/33333333-3333-4333-8333-333333333333`.
+14. Confirm the page shows a generic not-found/unavailable result and does not show Marina's name or request title.
+15. Sign out and confirm `/login` is shown.

@@ -67,7 +67,7 @@ Actual active time so far: about 79 minutes
 - [x] Task 00 - Inspect and validate plan/traceability.
 - [x] Task 01 - Foundation, dependencies, environment, Supabase clients.
 - [x] Task 02 - Schema, grants, RLS, seed, RLS verification.
-- [ ] Task 03 - Authentication and request application.
+- [x] Task 03 - Authentication and request application.
 - [ ] Task 04 - Mock ERP and invoice synchronization.
 - [ ] Task 05 - Adversarial release audit, documentation, and evidence.
 
@@ -105,6 +105,11 @@ Record actual findings here. Do not invent an AI mistake in advance.
 - Task 02 seed uses script-local Supabase clients and explicitly loads ignored `.env.local`. It seeds `admin@easypass.test` and `viewer@easypass.test` without logging passwords, plus Falcon Trading LLC, Oasis Foods FZE, Marina Tech DMCC, memberships, and deterministic service requests. `npm run seed` passed twice.
 - `npm run verify:rls` is no longer a placeholder. It signs in with authenticated publishable-key clients for both seed users; the privileged client is used only to delete fixed verification rows before/after assertions. All RLS assertions passed, including cross-company denial, viewer write denial, membership write denial, immutable request-column denial, service-request delete denial, and invoice select denial.
 - Task 02 intentionally did not implement auth pages, protected company pages, request Server Actions, mock ERP route, invoice sync orchestration, invoice UI, optional features, or final secret scanning.
+- Task 03 completed on 2026-07-12T15:05:00+05:30. Added email/password login, sign-out, root auth redirect, protected company list, protected company detail, admin request creation, admin status update, and viewer read-only presentation.
+- Task 03 normal application code uses only `createAuthenticatedServerClient`; `rg -n "supabase/admin|getSupabaseAdminClient|SUPABASE_SERVICE_ROLE_KEY" src/app src/components src/features src/lib/auth` returned no matches, so no normal route/action/component imports the privileged client.
+- Task 03 Server Actions independently call `auth.getClaims()`, parse FormData with Zod, force `created_by` from claims, force new request status to `submitted`, update only `service_requests.status`, and revalidate the affected company path after successful mutations.
+- Task 03 did not change migrations, grants, RLS policies, seed identities, invoice permissions, or the trusted sync function. `npm run verify:rls` still passes against the hosted Supabase project.
+- Browser smoke automation was attempted but blocked: sandboxed `Start-Process` was denied, approved dev-server launch did not leave a reachable localhost server, `agent-browser` was not on PATH, and the Node REPL browser fallback failed with a tool metadata error. Exact two-user manual smoke steps were recorded in `evidence/task03-manual-smoke.txt`.
 ## Milestones
 
 ### Task 00 - Inspection and plan confirmation
@@ -249,5 +254,5 @@ Complete during development:
 - Evidence paths: `evidence/bootstrap-foundation.txt`, `evidence/foundation-validation.txt`, `evidence/rls-verification.txt`
 - AI error caught: None requiring a contract change. The local tool editor failed under the Windows sandbox, so the same planned edits were applied with a repository-local script; validation caught no behavior drift.
 - Durable correction: Keep using npm for lockfile/dependency changes; do not manually clean extraneous optional native packages from `node_modules`.
-- Known limitations: Auth UI, service-request application behavior, invoice sync, real sync verification, and final secret scan remain later tasks. `verify:sync` and `check:secrets` are placeholders only. npm audit reports 2 moderate findings.
+- Known limitations: Invoice sync, real sync verification, final secret scan, and an executed browser smoke remain later tasks. `verify:sync` and `check:secrets` are placeholders only. npm audit reports 2 moderate findings.
 - Production escalation:

@@ -200,3 +200,49 @@ Task 02 omissions by design:
 - No mock ERP route.
 - No invoice sync orchestration, deduplication service, or invoice UI.
 - No optional features.
+
+## Task 03 auth/request app - 2026-07-12
+
+Prompt/task:
+- Execute `tasks/03-auth-and-request-app.md` after Task 02, preserving the verified hosted Supabase schema, grants, RLS policies, seed users, memberships, and RLS verification behavior.
+
+Actions:
+- Added root auth-based redirect, login page/action, protected layout, sign-out action, company list page, company detail page, request list, admin create form, admin status form, and viewer read-only presentation.
+- Added company and service-request query/schema/type modules using the authenticated cookie-bound Supabase server client only.
+- Server Actions call `auth.getClaims()` independently, Zod-parse form input, write through the authenticated client, and revalidate the affected company path after success.
+- No migrations, grants, RLS policies, seed identities, or invoice behavior were changed.
+
+Implemented routes:
+```text
+/ -> redirects authenticated users to /companies and unauthenticated users to /login
+/login -> email/password sign-in
+/companies -> protected member-company list with role
+/companies/[companyId] -> protected company request page
+```
+
+Authenticated read and mutation flows:
+```text
+Company list: company_members filtered by current claims.sub, joined to companies, with RLS still authoritative.
+Company detail: UUID validation, visible company lookup, self membership lookup, service_requests filtered by company_id newest first.
+Create request: companyId UUID + title 1..200, status forced to submitted, created_by forced to claims.sub.
+Update status: companyId UUID + requestId UUID + allowed status enum; update only service_requests.status with id and company_id filters.
+```
+
+Security review:
+- Normal app pages/actions/components import `src/lib/supabase/server.ts`, not `src/lib/supabase/admin.ts`.
+- `rg -n "supabase/admin|getSupabaseAdminClient|SUPABASE_SERVICE_ROLE_KEY" src/app src/components src/features src/lib/auth` returned no matches.
+- UI role checks are presentation-only. PostgreSQL grants and RLS remain the authorization boundary.
+- Inaccessible or invalid company IDs use `notFound()` and do not render protected company/request data.
+- User-facing action errors are generic and do not expose raw PostgreSQL messages.
+
+Verification:
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+- `npm test`: sandbox run failed with Vitest/Vite `spawn EPERM`; approved rerun passed, 1 test file and 1 test.
+- `npm run build`: sandbox run failed unlinking `.next/app-path-routes-manifest.json`; approved rerun passed and listed `/`, `/login`, `/companies`, `/companies/[companyId]`.
+- `npm run verify:rls`: passed, all RLS assertions still pass.
+
+Browser smoke status:
+- Local dev-server launch required approval because sandboxed `Start-Process` was denied.
+- After approved launch, the `agent-browser` CLI was not available on PATH and the Node REPL browser fallback failed with a tool metadata error, so automated browser smoke was not completed in this run.
+- Exact manual smoke steps were recorded in `evidence/task03-manual-smoke.txt`.
