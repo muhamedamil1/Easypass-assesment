@@ -43,31 +43,33 @@ Excluded until required checks pass:
 
 ## Time budget
 
-Target total active work: 4â€“6 hours.
+Target total active work: 4-6 hours.
 
 Suggested guardrails:
 
-- Task 00 inspection/plan: 15â€“20 min
-- Task 01 foundation/clients: 30â€“40 min
-- Task 02 database/RLS/seed: 75â€“90 min
-- Task 03 auth/request app: 75â€“90 min
-- Task 04 invoice sync: 60â€“75 min
-- Task 05 audit/docs/final evidence: 45â€“60 min
+- Task 00 inspection/plan: 15-30 min
+- Task 01 foundation/clients: 30-40 min
+- Task 02 database/RLS/seed: 75-90 min
+- Task 03 auth/request app: 75-90 min
+- Task 04 invoice sync: 60-75 min
+- Task 05 audit/docs/final evidence: 45-60 min
 
 When time is exhausted, stop optional work, preserve proof, and document unfinished items honestly.
 
 Actual start: 2026-07-12T12:31:00+05:30
+Task 00 inspection stop: 2026-07-12T12:59:59+05:30
+Task 00 active time: about 29 minutes
 Actual stop:
-Actual active time:
+Actual active time so far: about 29 minutes
 
 ## Progress
 
-- [~] Task 00 â€” Inspect and validate plan/traceability.
-- [~] Task 01 â€” Foundation, dependencies, environment, Supabase clients.
-- [ ] Task 02 â€” Schema, grants, RLS, seed, RLS verification.
-- [ ] Task 03 â€” Authentication and request application.
-- [ ] Task 04 â€” Mock ERP and invoice synchronization.
-- [ ] Task 05 â€” Adversarial release audit, documentation, and evidence.
+- [x] Task 00 - Inspect and validate plan/traceability.
+- [ ] Task 01 - Foundation, dependencies, environment, Supabase clients.
+- [ ] Task 02 - Schema, grants, RLS, seed, RLS verification.
+- [ ] Task 03 - Authentication and request application.
+- [ ] Task 04 - Mock ERP and invoice synchronization.
+- [ ] Task 05 - Adversarial release audit, documentation, and evidence.
 
 ## Decisions and discoveries
 
@@ -76,10 +78,24 @@ Record actual findings here. Do not invent an AI mistake in advance.
 - Direct `npx create-next-app@latest .` cannot run in the assessment root because the repository already contains required harness files. Used a temporary scaffold at `C:\tmp\easypass-next-scaffold` and copied only generated app/config files into root.
 - The generated `next/font/google` imports made `npm run build` depend on fetching Google Fonts. Removed those imports from `src/app/layout.tsx` so the baseline build is reproducible offline.
 - `npm install` and one `npm run build` attempt hit Windows/sandbox `EPERM` issues; rerunning those exact commands with approval passed.
+- Task 00 inspection on 2026-07-12 found the repository at scaffold-only state: EasyPass v3 harness, docs, task files, active plan, fixture, evidence bootstrap note, and minimal Next.js app/config exist; no Supabase integration, migrations, seed, auth pages/actions, product UI, scripts, tests, `.env.example`, or invoice sync exist.
+- Current installed top-level versions from `npm ls --depth=0`: Next.js 16.2.10, React 19.2.4, React DOM 19.2.4, TypeScript 5.9.3, ESLint 9.39.5, eslint-config-next 16.2.10, `@types/node` 20.19.43, `@types/react` 19.2.17, `@types/react-dom` 19.2.3. `@emnapi/runtime@1.11.2` appears extraneous.
+- Current package scripts are only `dev`, `build`, `start`, `lint`, and `typecheck`; required `test`, `seed`, `sync:invoices`, `verify:rls`, `verify:sync`, `check:secrets`, and `verify` scripts are not present yet.
+- Starter/demo files to replace or remove later: `src/app/page.tsx` still contains create-next-app demo content and imports missing `./page.module.css`; it also references `/next.svg` and `/vercel.svg`, but no `public/` assets are present. `src/app/globals.css` is generic scaffold styling. `next.config.ts` is empty scaffold config.
+- Existing `fixtures/mock-erp-invoices.json` is present and contains the canonical eight mock ERP invoices; it must remain unchanged during Task 04 except for verification that route/adapter serve it exactly.
+- Task 01 expected dependencies: `@supabase/supabase-js` and `@supabase/ssr` for authenticated SSR and privileged server clients; `server-only` to guard privileged imports; `zod` for env/form/external runtime validation; `vitest` for unit tests; `tsx` for TypeScript scripts; `dotenv` or equivalent explicit env loader for scripts. Avoid ORM, global state, form framework, query library, component system, and job framework.
+- Expected Task 01 files: `.env.example`, package scripts/dependencies, `src/lib/env/public.ts`, `src/lib/env/server.ts`, `src/lib/supabase/server.ts`, `src/lib/supabase/proxy.ts`, `src/lib/supabase/admin.ts`, root `proxy.ts`, Vitest config/setup as needed, and placeholder script entry points only where required to keep named commands available without implementing later behavior.
+- Expected Task 02 files: `supabase/migrations/001_extensions_types_tables.sql`, `002_functions_triggers_indexes.sql`, `003_grants_and_rls.sql`, `004_invoice_sync_function.sql`, `scripts/seed.ts`, `scripts/verify-rls.ts`, and `evidence/rls-verification.txt`.
+- Expected Task 03 files: `src/app/(auth)/login/page.tsx`, `src/app/(auth)/login/actions.ts`, `src/app/(protected)/layout.tsx`, `src/app/(protected)/companies/page.tsx`, `src/app/(protected)/companies/[companyId]/page.tsx`, `src/app/(protected)/companies/[companyId]/actions.ts`, auth/company/request components, and feature query/mutation/schema/type modules for companies and service requests.
+- Expected Task 04 files: `src/app/api/mock-erp/invoices/route.ts`, `src/features/erp/invoice-source.ts`, `src/features/erp/mock-erp-source.ts`, `src/features/erp/types.ts`, `src/features/invoices/schemas.ts`, `deduplicate.ts`, `sync-service.ts`, `types.ts`, `scripts/sync-invoices.ts`, `scripts/verify-sync.ts`, and tests under `tests/invoices/`.
+- Expected Task 05 files: `README.md`, completed `NOTES.md`, `scripts/check-secrets.ts`, final evidence files under `evidence/`, and updates to this ExecPlan/results. Root `README.md` does not exist yet; only `evidence/README.md` exists.
+- Version-sensitive APIs requiring official-doc verification before implementation: Next.js 16 `proxy.ts` file convention, matcher syntax, Server Actions/revalidate behavior, App Router redirects/notFound; Supabase `@supabase/ssr` cookie API with Next.js async cookies, `auth.getClaims()`, service-role client options and key naming; Supabase/PostgREST column grants/RPC execution behavior; PostgreSQL 18 RLS policy/default-deny/security-definer/search-path behavior and `INSERT ... ON CONFLICT DO UPDATE ... WHERE` semantics. Task 00 checked official Next.js, Supabase, and PostgreSQL docs; apply the exact current examples during implementation.
+- Official reference check notes: Next.js docs report latest version 16.2.10 and confirm `middleware` is deprecated in favor of `proxy.ts`, with static matcher constants and negative matching for assets; Supabase docs confirm `auth.getClaims()` verifies JWT claims and is preferred over `getUser` when JWKS can be used; PostgreSQL docs confirm RLS default-deny when enabled without policies and `ON CONFLICT DO UPDATE ... WHERE` atomic upsert behavior with skipped rows not returned.
+- No contradiction requiring a `Proposed` decision was found during Task 00. Current blockers are implementation absence only: Task 01 must add required dependencies/config/scripts/env/Supabase boundaries, and the starter page currently cannot be treated as product UI.
 
 ## Milestones
 
-### Task 00 â€” Inspection and plan confirmation
+### Task 00 - Inspection and plan confirmation
 
 Expected:
 
@@ -88,13 +104,14 @@ Expected:
 - verify every brief requirement has implementation and proof;
 - record blockers/proposed decisions without feature coding.
 
-Proof:
+Actual proof:
 
-- plan updated with actual repository state;
-- traceability remains complete;
-- no unresolved critical architecture decision.
+- read `AGENTS.md`, all `docs/*.md`, `.agent/PLANS.md`, active ExecPlan, `tasks/00` through `tasks/05`, scaffold/config files, fixture, bootstrap evidence, notes/setup/harness, package metadata, file inventory, and Git state;
+- compared current tree against `docs/IMPLEMENTATION.md` target structure and `docs/TRACEABILITY.md`;
+- plan updated with actual repository state, expected phase files, dependencies, API documentation risks, and current blockers;
+- no unresolved critical architecture decision found.
 
-### Task 01 â€” Foundation
+### Task 01 - Foundation
 
 Expected files:
 
@@ -102,7 +119,7 @@ Expected files:
 - `.env.example` and env parsing;
 - authenticated server/proxy and privileged Supabase clients;
 - Vitest/tsx setup;
-- placeholder directories only as needed.
+- placeholder script entry points only as needed to expose required commands before later phases.
 
 Proof:
 
@@ -110,7 +127,7 @@ Proof:
 - lint, typecheck, test runner, and build execute;
 - no product behavior or secret committed.
 
-### Task 02 â€” Database and RLS
+### Task 02 - Database and RLS
 
 Expected files:
 
@@ -125,7 +142,7 @@ Proof:
 - all access-matrix integration checks pass with real user sessions;
 - invoice/user access defaults closed.
 
-### Task 03 â€” Required application
+### Task 03 - Required application
 
 Expected:
 
@@ -142,7 +159,7 @@ Proof:
 - no normal path imports privileged client;
 - build/static checks pass.
 
-### Task 04 â€” Invoice sync
+### Task 04 - Invoice sync
 
 Expected:
 
@@ -159,7 +176,7 @@ Proof:
 - second run affects zero;
 - stale/conflict/unmatched tests pass without partial writes.
 
-### Task 05 â€” Release proof
+### Task 05 - Release proof
 
 Expected:
 
