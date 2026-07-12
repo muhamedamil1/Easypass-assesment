@@ -1,14 +1,14 @@
-# Development notes
+﻿# Development notes
 
-Complete with actual work only. Do not fabricate prompts, errors, commands, or results.
+These notes record actual work only. Secrets, passwords, JWTs, connection strings, and authorization headers are intentionally omitted.
 
 ## Time box
 
-- Started:
-- Stopped:
-- Approximate active time:
-- Required scope completed:
-- Intentionally omitted:
+- Started: 2026-07-12T12:31:00+05:30.
+- Stopped: 2026-07-12 after Task 05 release validation.
+- Approximate active time: the active ExecPlan records Task 00 at about 29 minutes and active implementation time at about 79 minutes before later Task 02-05 updates; final work exceeded the original 4-6 hour target because verification, evidence, and Windows sandbox reruns were preserved rather than skipped.
+- Required scope completed: Next.js foundation, Supabase SSR clients, hosted schema migrations, grants/RLS, seed, auth UI, protected company/request UI, mock ERP route, invoice validation/reduction/sync, RLS verification, sync verification, secret scan, README, NOTES, and release evidence.
+- Intentionally omitted: public signup, password reset, company/member administration, request deletion, invoice UI, cron/queue/webhook/retry worker, fuzzy matching, automatic ERP company creation, deployment polish, and optional browser automation.
 
 ## AI usage log
 
@@ -16,39 +16,55 @@ Tool: Codex
 
 | Stage | Actual prompt/task | Important agent output or assumption | Human review/action |
 |---|---|---|---|
-| Planning |  |  |  |
-| Database/RLS |  |  |  |
-| App |  |  |  |
-| Sync | Execute `tasks/04-invoice-sync.md` after Task 03; preserve existing invoices schema and `sync_invoices(jsonb)` RPC. | Use runtime validation/reduction before the trusted RPC; keep sync CLI-only and invoice UI out of scope. | Reviewed generated evidence and required final counters. |
-| Audit |  |  |  |
+| Planning | `tasks/00-inspect-and-plan.md` plus the repository contracts in `AGENTS.md` and `docs/`. | Read the source-of-truth files first, identified the scaffold-only starting state, and recorded expected files and verification gates in the active ExecPlan. | Reviewed the phase plan before implementation advanced. |
+| Foundation | `tasks/01-foundation-and-clients.md`. | Added Supabase SSR/admin boundaries, env parsing, required package scripts, and kept later verification scripts clearly marked as placeholders. | Placeholder verification was not accepted as final proof. |
+| Database/RLS | `tasks/02-database-rls-and-seed.md`. | Added migrations, private RLS helpers, minimal grants, seed, and real authenticated RLS verification. | Hosted Supabase migration/seed results were checked with sanitized evidence. |
+| App | `tasks/03-auth-and-request-app.md`. | Added login/sign-out, protected company pages, admin create/status actions, viewer read-only UI, and no normal-path privileged-client imports. | Manual two-user smoke was completed by the user and recorded in `evidence/task03-manual-smoke.txt`. |
+| Sync | `tasks/04-invoice-sync.md`. | Added mock ERP route, runtime validation, deterministic duplicate reduction, trusted CLI sync, and edge-case verification. | Reviewed generated evidence and required final counters. |
+| Audit | `tasks/05-adversarial-release-audit.md` and accepted findings. | First pass found the placeholder secret scan, missing root README, incomplete NOTES, and missing final evidence. | Accepted all four findings and requested the smallest durable corrections. |
 
-## AI error and durable correction
+## AI/tooling error and durable correction
 
-- What the AI got wrong:
-- Why it was risky/incorrect:
-- How I detected it:
-- Immediate correction:
-- Durable protection added (constraint, RLS, test, script, lint, or contract):
+- What went wrong: the first `psql` migration invocation used malformed argument ordering; it connected but ignored the migration file options.
+- Why it was risky: it could have produced a false belief that the database schema existed while zero required tables were present.
+- How it was detected: a sanitized schema check after the attempt showed 0 required public tables.
+- Immediate correction: reran migration application with corrected absolute-path invocation in timestamp order.
+- Durable protection added: `npm run verify:rls` now signs in as real seeded users and proves the RLS access matrix against the hosted database; README documents the ordered migration process; release validation requires the verification scripts, not migration claims alone.
+
+A second release-gate issue was also caught during Task 05: early placeholder commands for `verify:rls`, `verify:sync`, and `check:secrets` existed before their implementation phases. The active plan and evidence explicitly marked them as placeholders, and Task 05 replaced the remaining placeholder secret scanner with a real failing gate and regression tests.
 
 ## RLS verification
 
-Test accounts/memberships:
+Test accounts and memberships:
 
 ```text
-Add actual seeded setup.
+admin@easypass.test: Falcon Trading LLC admin only.
+viewer@easypass.test: Falcon Trading LLC viewer and Oasis Foods FZE admin.
+Marina Tech DMCC: no members.
 ```
 
 Command:
 
 ```text
-Add actual command.
+npm run verify:rls
 ```
 
 Observed results:
 
 ```text
-Summarize actual results and link evidence/rls-verification.txt.
+Result: PASS (all RLS assertions passed)
+Evidence: evidence/rls-verification.txt
+Authorization proof used authenticated publishable-key sessions for the seed users.
+The privileged client was used only for fixed verification-row cleanup.
 ```
+
+Important assertions passed: admin lists Falcon only; admin cannot read Oasis by known ID; viewer reads Falcon and Oasis memberships; viewer cannot insert or update Falcon requests; viewer as Oasis admin can insert and update Oasis requests; neither user reads Marina company or a known Marina request; users cannot manage memberships, update immutable request columns, delete requests, or select invoices.
+
+## Browser smoke proof
+
+Evidence: `evidence/task03-manual-smoke.txt`.
+
+The user-confirmed manual run passed for admin Falcon-only access/create/update, viewer Falcon read-only plus Oasis admin create/update, sign-out, hidden Marina, and unauthorized direct company URL no-data behavior.
 
 ## Sync idempotency and recency proof
 
@@ -87,17 +103,16 @@ Evidence: evidence/sync-edge-cases.txt
 
 ## Production escalation question
 
-Recommended topic: the ERP provides only `company_name`. Explain why stable external company identity, unmatched handling, and reconciliation policy require senior/product/ERP-owner agreement before a real financial launch.
+Question: Can the ERP provide a stable external company identifier and can product/operations approve an explicit mapping and reconciliation policy before financial invoice sync is used in production?
 
-Final answer:
-
-```text
-Write the actual question/decision and reasoning.
-```
+Reason: the assessment payload only includes `company_name`, so this implementation uses normalized exact-name matching as a documented compromise. In production, names may change, collide, include legal suffix variations, or become ambiguous. Financial invoice matching should use a stable ERP company ID, an explicit mapping table, unmatched/ambiguous reconciliation workflow, and an owner-approved policy for changes and backfills.
 
 ## What I would do with more time
 
--
+- Add automated browser smoke once local browser tooling is available.
+- Add a migration status helper for fresh Supabase projects.
+- Add production-grade ERP company mapping, sync-run audit records, retries, observability, and reconciliation UI after the assessment gate.
+- Review and remediate npm audit findings only if a safe non-breaking update path is available.
 
 ## Bootstrap foundation - 2026-07-12
 
@@ -120,7 +135,7 @@ Evidence:
 - `evidence/bootstrap-foundation.txt`
 
 Limitation:
-- Full application, Supabase schema/RLS, sync, seed, and final acceptance scripts are not implemented yet.
+- Full application, Supabase schema/RLS, sync, seed, and final acceptance scripts were not implemented yet at this stage.
 
 ## Task 01 foundation - 2026-07-12
 
@@ -148,10 +163,9 @@ Verification:
 Evidence:
 - `evidence/foundation-validation.txt`
 
-Limitations:
-- RLS, seed data, auth UI, service requests, invoice sync, real RLS/sync verification, and final secret scan remain unimplemented. Placeholder script success is not acceptance proof.
+Limitations then:
+- RLS, seed data, auth UI, service requests, invoice sync, real RLS/sync verification, and final secret scan remained unimplemented.
 - npm reported 2 moderate audit findings after dependency installation.
-- `npm ls --depth=0` still reports optional native/wasm packages such as `@emnapi/runtime` as extraneous in `node_modules`; no manual lockfile or install-tree cleanup was performed.
 
 ## Task 02 database/RLS - 2026-07-12
 
@@ -184,23 +198,6 @@ Memberships: admin=Falcon admin; viewer=Falcon viewer, Oasis admin; Marina has n
 Requests: Falcon=2, Oasis=1, Marina=1
 Passwords/tokens/connection strings were not logged.
 ```
-
-RLS verification:
-```text
-Command: npm run verify:rls
-Result: PASS (all RLS assertions passed)
-Evidence: evidence/rls-verification.txt
-Authorization proof used authenticated test-user clients. The privileged client was used only for fixed verification-row cleanup.
-```
-
-Important RLS assertions passed:
-- Admin lists Falcon only and cannot read Oasis requests by known ID.
-- Viewer lists Falcon and Oasis, reads Falcon requests, but cannot insert or update Falcon requests.
-- Viewer as Oasis admin can insert and update Oasis request status.
-- Neither user reads Marina company or a known Marina request ID.
-- Users cannot insert, update, delete, or self-promote memberships.
-- Users cannot update immutable request columns or delete requests.
-- Authenticated users cannot select invoices.
 
 Task 02 omissions by design:
 - No login/sign-out pages.
@@ -244,18 +241,12 @@ Security review:
 - Inaccessible or invalid company IDs use `notFound()` and do not render protected company/request data.
 - User-facing action errors are generic and do not expose raw PostgreSQL messages.
 
-Verification:
-- `npm run typecheck`: passed.
-- `npm run lint`: passed.
-- `npm test`: sandbox run failed with Vitest/Vite `spawn EPERM`; approved rerun passed, 1 test file and 1 test.
-- `npm run build`: sandbox run failed unlinking `.next/app-path-routes-manifest.json`; approved rerun passed and listed `/`, `/login`, `/companies`, `/companies/[companyId]`.
-- `npm run verify:rls`: passed, all RLS assertions still pass.
-
 Browser smoke status:
 - Local dev-server launch required approval because sandboxed `Start-Process` was denied.
 - After approved launch, the `agent-browser` CLI was not available on PATH and the Node REPL browser fallback failed with a tool metadata error, so automated browser smoke was not completed in this run.
 - Exact manual smoke steps were recorded in `evidence/task03-manual-smoke.txt`.
-- User later confirmed the manual two-user browser smoke passed for admin Falcon-only access/create/update, viewer Falcon read-only plus Oasis admin create/update, sign-out, hidden Marina, and unauthorized direct company URL no-data behavior.
+- User later confirmed the manual two-user browser smoke passed.
+
 ## Task 04 invoice sync - 2026-07-12
 
 Prompt/task:
@@ -275,11 +266,6 @@ Security/data review:
 - Company resolution remains normalized exact-name matching in PostgreSQL; no fuzzy matching or automatic company creation was added.
 - Invalid/conflicting input stops before RPC; unmatched input raises through the RPC before persistence; failed edge cases produced no partial writes.
 - Privileged credentials are loaded only in trusted scripts; no public privileged sync HTTP endpoint or invoice UI was added.
-
-Verification:
-- `npm run sync:invoices`: passed; current idempotent run emitted received=8, unique=6, affected=0, finalInvoiceCount=6 because the six latest rows already existed.
-- `npm run verify:sync`: passed after reset-first sequential run; first run affected 6 and final count 6; second run affected 0 and final count 6; stale/conflict/unmatched checks passed.
-- Unit tests passed after approved rerun because sandboxed Vitest hit Windows `spawn EPERM` before loading tests.
 
 Important correction:
 - One attempted parallel run of `npm run sync:invoices` and `npm run verify:sync` made the verifier's reset-first assertion observe rows inserted by the concurrent standalone sync, producing a false affected=0 first-run failure. The commands were rerun sequentially and passed; do not run those two sync commands concurrently against the same `mock-erp` source during verification.

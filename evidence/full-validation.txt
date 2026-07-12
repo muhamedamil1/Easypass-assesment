@@ -1,0 +1,55 @@
+# Full validation evidence - 2026-07-12T19:03:41+05:30
+
+Scope:
+- Task 05 accepted findings fixed: real secret scanner, root README, completed NOTES, final evidence.
+- Commands below were run after the final source/doc changes.
+
+Commands and actual outcomes:
+
+1. `npm run lint`
+   - Result: PASS.
+   - Output summary: ESLint completed with no reported errors.
+
+2. `npm run typecheck`
+   - Result: PASS.
+   - Output summary: `tsc --noEmit` completed successfully.
+
+3. `npm test`
+   - First sandbox attempt: FAIL before tests with Windows `spawn EPERM` while Vitest/Vite loaded config.
+   - Approved rerun: PASS.
+   - Output summary: 5 test files passed, 18 tests passed.
+   - Secret-scanner regression coverage included: fake secret is detected, empty `.env.example` placeholders pass, PowerShell setup placeholders pass, and formatted output does not include the fake secret value.
+
+4. `npm run build`
+   - First sandbox attempt: FAIL before build completion with `EPERM` unlinking `.next/app-path-routes-manifest.json`.
+   - Approved rerun: PASS.
+   - Output summary: Next.js 16.2.10 compiled successfully; TypeScript finished; 6 static pages generated; routes listed included `/`, `/api/mock-erp/invoices`, `/companies`, `/companies/[companyId]`, and `/login`.
+
+5. `npm run verify:rls`
+   - Result: PASS.
+   - Output summary: all RLS assertions passed using authenticated publishable-key sessions; privileged client use was limited to verification row cleanup.
+   - Evidence regenerated: `evidence/rls-verification.txt`.
+
+6. `npm run verify:sync`
+   - Result: PASS.
+   - Output summary: first run received 8, reduced to 6, affected 6, final 6; second identical run affected 0 and final remained 6; stale, equal-timestamp conflict, unmatched-company, no-partial-write, and unique-identity assertions passed.
+   - Evidence regenerated: `evidence/sync-run-1.txt`, `evidence/sync-run-2.txt`, `evidence/sync-edge-cases.txt`.
+
+7. `npm run check:secrets`
+   - Earlier sandbox attempt before final rerun: FAIL before scanner execution with `tsx`/esbuild `spawn EPERM`.
+   - Final approved rerun after regenerated evidence: PASS.
+   - Output summary: no working-tree or Git-history secret findings; scanner prints only sanitized category/path/line findings if it fails and never prints secret values.
+   - Evidence regenerated: `evidence/secret-scan.txt`.
+
+8. `git diff --check`
+   - Result: PASS.
+   - Output summary: no whitespace errors. Git printed CRLF conversion warnings for some working-copy files; those are line-ending warnings, not diff-check failures.
+
+Manual evidence:
+- Two-user smoke remains user-confirmed and recorded in `evidence/task03-manual-smoke.txt`.
+
+Release review:
+- Root `README.md` was reviewed as a fresh-clone/new-hosted-Supabase setup guide.
+- `NOTES.md` no longer contains required placeholder sections.
+- `docs/TRACEABILITY.md` points release requirements to implementation and evidence.
+- No unresolved Proposed decision was added.

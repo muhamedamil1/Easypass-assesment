@@ -59,8 +59,8 @@ When time is exhausted, stop optional work, preserve proof, and document unfinis
 Actual start: 2026-07-12T12:31:00+05:30
 Task 00 inspection stop: 2026-07-12T12:59:59+05:30
 Task 00 active time: about 29 minutes
-Actual stop:
-Actual active time so far: about 79 minutes
+Actual stop: 2026-07-12T19:03:41+05:30
+Actual active time so far: exceeded the original 4-6 hour target once final audit, evidence, and sandbox reruns were included; Task 00 was about 29 minutes and the plan had recorded about 79 minutes by early implementation.
 
 ## Progress
 
@@ -69,7 +69,7 @@ Actual active time so far: about 79 minutes
 - [x] Task 02 - Schema, grants, RLS, seed, RLS verification.
 - [x] Task 03 - Authentication and request application.
 - [x] Task 04 - Mock ERP and invoice synchronization.
-- [ ] Task 05 - Adversarial release audit, documentation, and evidence.
+- [x] Task 05 - Adversarial release audit, documentation, and evidence.
 
 ## Decisions and discoveries
 
@@ -88,7 +88,7 @@ Record actual findings here. Do not invent an AI mistake in advance.
 - Expected Task 02 files: `supabase/migrations/001_extensions_types_tables.sql`, `002_functions_triggers_indexes.sql`, `003_grants_and_rls.sql`, `004_invoice_sync_function.sql`, `scripts/seed.ts`, `scripts/verify-rls.ts`, and `evidence/rls-verification.txt`.
 - Expected Task 03 files: `src/app/(auth)/login/page.tsx`, `src/app/(auth)/login/actions.ts`, `src/app/(protected)/layout.tsx`, `src/app/(protected)/companies/page.tsx`, `src/app/(protected)/companies/[companyId]/page.tsx`, `src/app/(protected)/companies/[companyId]/actions.ts`, auth/company/request components, and feature query/mutation/schema/type modules for companies and service requests.
 - Expected Task 04 files: `src/app/api/mock-erp/invoices/route.ts`, `src/features/erp/invoice-source.ts`, `src/features/erp/mock-erp-source.ts`, `src/features/erp/types.ts`, `src/features/invoices/schemas.ts`, `deduplicate.ts`, `sync-service.ts`, `types.ts`, `scripts/sync-invoices.ts`, `scripts/verify-sync.ts`, and tests under `tests/invoices/`.
-- Expected Task 05 files: `README.md`, completed `NOTES.md`, `scripts/check-secrets.ts`, final evidence files under `evidence/`, and updates to this ExecPlan/results. Root `README.md` does not exist yet; only `evidence/README.md` exists.
+- Expected Task 05 files: `README.md`, completed `NOTES.md`, `scripts/check-secrets.ts`, final evidence files under `evidence/`, and updates to this ExecPlan/results. Root `README.md` has been added with fresh-clone setup steps.
 - Version-sensitive APIs requiring official-doc verification before implementation: Next.js 16 `proxy.ts` file convention, matcher syntax, Server Actions/revalidate behavior, App Router redirects/notFound; Supabase `@supabase/ssr` cookie API with Next.js async cookies, `auth.getClaims()`, service-role client options and key naming; Supabase/PostgREST column grants/RPC execution behavior; PostgreSQL 18 RLS policy/default-deny/security-definer/search-path behavior and `INSERT ... ON CONFLICT DO UPDATE ... WHERE` semantics. Task 00 checked official Next.js, Supabase, and PostgreSQL docs; apply the exact current examples during implementation.
 - Official reference check notes: Next.js docs report latest version 16.2.10 and confirm `middleware` is deprecated in favor of `proxy.ts`, with static matcher constants and negative matching for assets; Supabase docs confirm `auth.getClaims()` verifies JWT claims and is preferred over `getUser` when JWKS can be used; PostgreSQL docs confirm RLS default-deny when enabled without policies and `ON CONFLICT DO UPDATE ... WHERE` atomic upsert behavior with skipped rows not returned.
 - No contradiction requiring a `Proposed` decision was found during Task 00. Current blockers are implementation absence only: Task 01 must add required dependencies/config/scripts/env/Supabase boundaries, and the starter page currently cannot be treated as product UI.
@@ -219,19 +219,20 @@ Proof:
 
 ### Task 05 - Release proof
 
-Expected:
+Actual:
 
-- fresh-thread findings-first audit;
-- accepted fixes plus regression checks;
-- README and NOTES completed from actual evidence;
-- secret/history check;
-- full validation evidence regenerated.
+- First-pass adversarial audit accepted four release findings: placeholder secret scan, missing root README, incomplete NOTES, and missing final validation/secret evidence.
+- Replaced `scripts/check-secrets.ts` with a real tracked-file, untracked non-ignored workspace-file, and practical Git-history scanner that reports only sanitized category/path/line findings and writes `evidence/secret-scan.txt`.
+- Added scanner regression tests proving fake secrets fail, empty `.env.example` placeholders pass, and output does not print secret material.
+- Added `README.md`, completed `NOTES.md`, updated `docs/TRACEABILITY.md`, and generated final evidence files.
+- Reviewed `README.md` from a fresh-clone/new-Supabase perspective; required setup, migration, seed, app, sync, verification, smoke, limitations, AI disclosure, and security warning steps are present.
 
 Proof:
 
-- every acceptance and traceability item has evidence;
-- limitations and production escalation are explicit.
-
+- `evidence/full-validation.txt`
+- `evidence/secret-scan.txt`
+- `npm run check:secrets` real scanner gate.
+- `git diff --check` passed after final whitespace cleanup.
 ## Validation
 
 ```bash
@@ -256,9 +257,9 @@ Manual:
 
 Complete during development:
 
-- Delivered behavior: Task 01 foundation, Task 02 database/RLS/seed, Task 03 auth/request app, and Task 04 mock ERP invoice sync are in place with objective verification evidence.
-- Evidence paths: `evidence/bootstrap-foundation.txt`, `evidence/foundation-validation.txt`, `evidence/rls-verification.txt`, `evidence/sync-run-1.txt`, `evidence/sync-run-2.txt`, `evidence/sync-edge-cases.txt`
+- Delivered behavior: Task 01 foundation, Task 02 database/RLS/seed, Task 03 auth/request app, Task 04 mock ERP invoice sync, and Task 05 release audit corrections are in place with objective verification evidence.
+- Evidence paths: `evidence/bootstrap-foundation.txt`, `evidence/foundation-validation.txt`, `evidence/rls-verification.txt`, `evidence/sync-run-1.txt`, `evidence/sync-run-2.txt`, `evidence/sync-edge-cases.txt`, `evidence/secret-scan.txt`, `evidence/full-validation.txt`
 - AI error caught: None requiring a contract change. The local tool editor failed under the Windows sandbox, so the same planned edits were applied with a repository-local script; validation caught no behavior drift.
 - Durable correction: Keep using npm for lockfile/dependency changes; do not manually clean extraneous optional native packages from `node_modules`.
-- Known limitations: final release audit, README completion, final secret scan, and automated browser smoke remain later tasks. `check:secrets` is still a placeholder until Task 05. npm audit reports 2 moderate findings.
-- Production escalation:
+- Known limitations: automated browser smoke remains manual/user-confirmed, and npm audit reports 2 moderate findings. Task 05 replaced the placeholder secret scan and completed README, NOTES, traceability, and final evidence.
+- Production escalation: ERP invoice company matching should move from normalized exact names to stable external company IDs, explicit mappings, and reconciliation policy before production financial use.
