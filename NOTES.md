@@ -6,32 +6,87 @@ These notes record actual work only. Secrets, passwords, JWTs, connection string
 
 - Started: 2026-07-12T12:31:00+05:30.
 - Stopped: 2026-07-12 after Task 05 release validation.
-- Approximate active time: the active ExecPlan records Task 00 at about 29 minutes and active implementation time at about 79 minutes before later Task 02-05 updates; final work exceeded the original 4-6 hour target because verification, evidence, and Windows sandbox reruns were preserved rather than skipped.
-- Required scope completed: Next.js foundation, Supabase SSR clients, hosted schema migrations, grants/RLS, seed, auth UI, protected company/request UI, mock ERP route, invoice validation/reduction/sync, RLS verification, sync verification, secret scan, README, NOTES, and release evidence.
-- Intentionally omitted: public signup, password reset, company/member administration, request deletion, invoice UI, cron/queue/webhook/retry worker, fuzzy matching, automatic ERP company creation, deployment polish, and optional browser automation.
+- Approximate active time: an exact minute-by-minute total was not tracked continuously. The active ExecPlan records Task 00 at about 29 minutes and roughly 79 minutes of active implementation before the later Task 02-05 work. Including hosted database setup, RLS verification, manual browser smoke, invoice-sync verification, documentation, deployment, evidence collection, and Windows sandbox reruns, the final work clearly exceeded the original 4-6 hour target.
+- Reason for exceeding the time box: verification and evidence were preserved rather than skipped. In particular, the hosted migrations, authenticated RLS assertions, repeatable seed, sync edge cases, manual two-user smoke, release audit, and secret scan were completed instead of being claimed from code inspection alone.
+- Required scope completed: Next.js foundation, Supabase SSR clients, hosted schema migrations, grants/RLS, repeatable seed, auth UI, protected company/request UI, mock ERP route, invoice validation/reduction/sync, RLS verification, sync verification, secret scan, README, NOTES, and release evidence.
+- Bonus status: a Vercel deployment was completed, and automated tests were implemented with Vitest. Playwright browser automation and a screen recording remained optional.
+- Intentionally omitted: public signup, password reset, company/member administration, request deletion, invoice UI, cron/queue/webhook/retry worker, fuzzy matching, automatic ERP company creation, production reconciliation UI, and optional Playwright browser automation.
 
 ## AI usage log
 
 Tool: Codex
 
-| Stage | Actual prompt/task | Important agent output or assumption | Human review/action |
-|---|---|---|---|
-| Planning | `tasks/00-inspect-and-plan.md` plus the repository contracts in `AGENTS.md` and `docs/`. | Read the source-of-truth files first, identified the scaffold-only starting state, and recorded expected files and verification gates in the active ExecPlan. | Reviewed the phase plan before implementation advanced. |
-| Foundation | `tasks/01-foundation-and-clients.md`. | Added Supabase SSR/admin boundaries, env parsing, required package scripts, and kept later verification scripts clearly marked as placeholders. | Placeholder verification was not accepted as final proof. |
-| Database/RLS | `tasks/02-database-rls-and-seed.md`. | Added migrations, private RLS helpers, minimal grants, seed, and real authenticated RLS verification. | Hosted Supabase migration/seed results were checked with sanitized evidence. |
-| App | `tasks/03-auth-and-request-app.md`. | Added login/sign-out, protected company pages, admin create/status actions, viewer read-only UI, and no normal-path privileged-client imports. | Manual two-user smoke was completed by the user and recorded in `evidence/task03-manual-smoke.txt`. |
-| Sync | `tasks/04-invoice-sync.md`. | Added mock ERP route, runtime validation, deterministic duplicate reduction, trusted CLI sync, and edge-case verification. | Reviewed generated evidence and required final counters. |
-| Audit | `tasks/05-adversarial-release-audit.md` and accepted findings. | First pass found the placeholder secret scan, missing root README, incomplete NOTES, and missing final evidence. | Accepted all four findings and requested the smallest durable corrections. |
+| Stage        | Actual prompt/task                                                                       | Important agent output or assumption                                                                                                                          | Human review/action                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Planning     | `tasks/00-inspect-and-plan.md` plus the repository contracts in `AGENTS.md` and `docs/`. | Read the source-of-truth files first, identified the scaffold-only starting state, and recorded expected files and verification gates in the active ExecPlan. | Reviewed the phase plan before implementation advanced.                                             |
+| Foundation   | `tasks/01-foundation-and-clients.md`.                                                    | Added Supabase SSR/admin boundaries, env parsing, required package scripts, and kept later verification scripts clearly marked as placeholders.               | Placeholder verification was not accepted as final proof.                                           |
+| Database/RLS | `tasks/02-database-rls-and-seed.md`.                                                     | Added migrations, private RLS helpers, minimal grants, seed, and real authenticated RLS verification.                                                         | Hosted Supabase migration/seed results were checked with sanitized evidence.                        |
+| App          | `tasks/03-auth-and-request-app.md`.                                                      | Added login/sign-out, protected company pages, admin create/status actions, viewer read-only UI, and no normal-path privileged-client imports.                | Manual two-user smoke was completed by the user and recorded in `evidence/task03-manual-smoke.txt`. |
+| Sync         | `tasks/04-invoice-sync.md`.                                                              | Added mock ERP route, runtime validation, deterministic duplicate reduction, trusted CLI sync, and edge-case verification.                                    | Reviewed generated evidence and required final counters.                                            |
+| Audit        | `tasks/05-adversarial-release-audit.md` and accepted findings.                           | First pass found the placeholder secret scan, missing root README, incomplete NOTES, and missing final evidence.                                              | Accepted all four findings and requested the smallest durable corrections.                          |
 
-## AI/tooling error and durable correction
+### Actual prompt excerpts used with Codex
 
-- What went wrong: the first `psql` migration invocation used malformed argument ordering; it connected but ignored the migration file options.
-- Why it was risky: it could have produced a false belief that the database schema existed while zero required tables were present.
-- How it was detected: a sanitized schema check after the attempt showed 0 required public tables.
-- Immediate correction: reran migration application with corrected absolute-path invocation in timestamp order.
-- Durable protection added: `npm run verify:rls` now signs in as real seeded users and proves the RLS access matrix against the hosted database; README documents the ordered migration process; release validation requires the verification scripts, not migration claims alone.
+The following are representative excerpts from the real task prompts used during implementation. They are included to show the constraints given to the AI, not reconstructed ideal prompts.
 
-A second release-gate issue was also caught during Task 05: early placeholder commands for `verify:rls`, `verify:sync`, and `check:secrets` existed before their implementation phases. The active plan and evidence explicitly marked them as placeholders, and Task 05 replaced the remaining placeholder secret scanner with a real failing gate and regression tests.
+#### Prompt 1 — continue Task 02 after the database URL was configured
+
+```text
+I have now added the ignored SUPABASE_DB_URL to .env.local using the Supabase Session pooler connection string.
+
+Continue Task 02 from the current repository state.
+
+Before applying migrations:
+
+1. Confirm the environment loader can read SUPABASE_DB_URL without displaying it.
+2. Do not print, log, or include the connection string in evidence.
+3. Apply the four migrations in their documented order.
+4. Stop immediately if any migration fails; do not continue with seed or RLS verification on a partially migrated schema.
+5. After successful migrations, run the repeatable seed twice.
+6. Replace and run the real RLS verification.
+7. Save only sanitized evidence.
+8. Run the complete Task 02 validation chain.
+
+Report migration names and outcomes without exposing credentials.
+```
+
+#### Prompt 2 — Task 03 authenticated application
+
+```text
+Execute tasks/03-auth-and-request-app.md.
+
+Task 02 is complete and verified.
+
+Before modifying files, inspect the authenticated Supabase server and proxy clients, the privileged client boundary, the applied migrations and RLS policies, the seed identities and membership model, the real RLS verification script, the current App Router scaffold, and the active ExecPlan.
+
+Confirm that all normal company and request operations use the authenticated user-scoped Supabase client; no normal application route imports or uses the privileged client; RLS remains the final authorization boundary; UI role checks are presentation-only; every Server Action independently validates authentication and input; inaccessible company and request IDs do not leak protected data; and no database policy is weakened to make the UI work.
+
+Do not use the service-role or privileged client to make normal pages or actions work.
+```
+
+#### Prompt 3 — Task 04 invoice synchronization
+
+```text
+Execute tasks/04-invoice-sync.md.
+
+The database already contains the invoices table and trusted sync_invoices(jsonb) PostgreSQL function created during Task 02. Preserve that database boundary unless a reproducible defect is found.
+
+Implement deterministic duplicate reduction, equal-timestamp conflict rejection, exact normalized company resolution, trusted CLI invoice sync, real verify:sync, unit tests, and sanitized evidence.
+
+Confirm that invoice identity remains (source, external_id); only strictly newer source timestamps update existing rows; payload order never selects the winner; no fuzzy matching or automatic company creation is allowed; invalid, conflicting, unmatched, or ambiguous input creates no partial invoice writes; privileged credentials remain server-only; no privileged public sync HTTP endpoint is added; and invoice UI remains out of scope.
+
+Do not claim Task 04 complete while verify:sync is a placeholder, any edge case fails, or the final database state is incorrect.
+```
+
+## AI mistake and durable correction
+
+- What the AI-assisted run got wrong: during the Codex-guided Task 02 execution, the first generated `psql` migration invocation used malformed argument ordering. It connected to PostgreSQL but ignored the migration file options, so the connection itself looked successful even though no required schema had been applied.
+- Why it was risky: this could have produced a false belief that the hosted database was ready while zero required tables were present.
+- How it was detected: the migration result was not trusted on connection success alone. A sanitized post-command schema check found 0 required public tables.
+- Immediate correction: the command construction and path handling were reviewed, and the four timestamped migrations were rerun sequentially with `ON_ERROR_STOP`, one transaction per migration file, and the corrected absolute-path invocation.
+- Durable protection added: `npm run verify:rls` signs in as real seeded users and proves the RLS access matrix against the hosted database; the README documents ordered migration application; and release validation requires the real verification scripts rather than accepting migration or code-generation claims alone.
+
+A second AI-assisted release-gate issue was caught during Task 05: early placeholder commands for `verify:rls`, `verify:sync`, and `check:secrets` existed before their implementation phases. The active plan and evidence explicitly marked them as placeholders so they could not be mistaken for acceptance proof. Task 05 replaced the remaining placeholder secret scanner with a real failing gate and regression tests.
 
 ## RLS verification
 
@@ -68,7 +123,9 @@ The user-confirmed manual run passed for admin Falcon-only access/create/update,
 
 ## Sync idempotency and recency proof
 
-First run:
+Within one controlled `npm run verify:sync` execution, the verifier first resets only its controlled `mock-erp` invoice rows, performs a clean first sync, and then performs a second identical sync against the resulting state.
+
+First internal sync:
 
 ```text
 Command: npm run verify:sync
@@ -76,7 +133,7 @@ Observed: received=8, unique=6, affected=6, finalInvoiceCount=6.
 Evidence: evidence/sync-run-1.txt
 ```
 
-Second identical run:
+Second identical internal sync:
 
 ```text
 Command: npm run verify:sync
@@ -117,14 +174,17 @@ Reason: the assessment payload only includes `company_name`, so this implementat
 ## Bootstrap foundation - 2026-07-12
 
 Prompt/task:
+
 - The user showed `npx create-next-app@latest .` failing because the assessment root already contained harness and evidence files.
 
 Actions:
+
 - Preserved the existing repository files and scaffolded in `C:\tmp\easypass-next-scaffold`.
 - Copied official Next.js app/config files into the root.
 - Added `typecheck`, renamed the package, and removed `next/font/google` to keep builds independent of Google Fonts fetches.
 
 Verification:
+
 - `npm install`: passed after rerun with approval due sandbox `EPERM` on install scripts.
 - `npm run lint`: passed.
 - `npm run typecheck`: passed.
@@ -132,17 +192,21 @@ Verification:
 - `git diff --check`: passed.
 
 Evidence:
+
 - `evidence/bootstrap-foundation.txt`
 
 Limitation:
+
 - Full application, Supabase schema/RLS, sync, seed, and final acceptance scripts were not implemented yet at this stage.
 
 ## Task 01 foundation - 2026-07-12
 
 Prompt/task:
+
 - Execute `tasks/01-foundation-and-clients.md` after Task 00, with official Next.js/Supabase docs checked for version-sensitive proxy and SSR client APIs.
 
 Actions:
+
 - Installed `@supabase/supabase-js`, `@supabase/ssr`, `server-only`, `zod`, `vitest`, `tsx`, and `dotenv` through npm.
 - Added `.env.example` with placeholders only and updated `.gitignore` so it is not ignored.
 - Added lazy public/server env parsing and Supabase authenticated server, proxy refresh, and privileged server-only clients.
@@ -151,6 +215,7 @@ Actions:
 - Replaced the broken starter root page with a minimal temporary foundation page.
 
 Verification:
+
 - `npm run lint`: passed.
 - `npm run typecheck`: passed.
 - `npm test`: sandbox run failed with `spawn EPERM`; approved rerun passed, 1 test file and 1 test.
@@ -161,25 +226,30 @@ Verification:
 - `git diff --check`: passed.
 
 Evidence:
+
 - `evidence/foundation-validation.txt`
 
 Limitations then:
+
 - RLS, seed data, auth UI, service requests, invoice sync, real RLS/sync verification, and final secret scan remained unimplemented.
 - npm reported 2 moderate audit findings after dependency installation.
 
 ## Task 02 database/RLS - 2026-07-12
 
 Prompt/task:
+
 - Execute `tasks/02-database-rls-and-seed.md` after Task 01, using the hosted Supabase project configured through ignored `.env.local`.
 - Continue after `SUPABASE_DB_URL` was added locally, without printing or storing the connection string.
 
 Actions:
+
 - Added four ordered migrations for enums, companies, memberships, service requests, invoices, constraints, indexes, timestamp trigger, private RLS helpers, grants, policies, and trusted `public.sync_invoices(jsonb)` execute boundary.
 - Added repeatable `scripts/seed.ts` using script-local Supabase clients and ignored env values.
 - Added real `scripts/verify-rls.ts` using authenticated publishable-key sessions for authorization assertions.
 - Wrote sanitized RLS evidence to `evidence/rls-verification.txt`.
 
 Migration application:
+
 - Confirmed `SUPABASE_DB_URL` was present, nonempty, and Postgres-shaped without displaying it.
 - A first malformed `psql` argument ordering connected but ignored migration file arguments; a sanitized schema check showed 0 required tables, so it was not treated as applied.
 - A second path-resolution attempt stopped before SQL execution because the filename set was wrong for the actual timestamped files.
@@ -191,6 +261,7 @@ Migration application:
 - Sanitized schema check after migration found all 4 required public tables.
 
 Seeded setup:
+
 ```text
 Users: admin@easypass.test, viewer@easypass.test
 Companies: Falcon Trading LLC, Oasis Foods FZE, Marina Tech DMCC
@@ -200,6 +271,7 @@ Passwords/tokens/connection strings were not logged.
 ```
 
 Task 02 omissions by design:
+
 - No login/sign-out pages.
 - No protected company pages.
 - No service-request UI or Server Actions.
@@ -210,15 +282,18 @@ Task 02 omissions by design:
 ## Task 03 auth/request app - 2026-07-12
 
 Prompt/task:
+
 - Execute `tasks/03-auth-and-request-app.md` after Task 02, preserving the verified hosted Supabase schema, grants, RLS policies, seed users, memberships, and RLS verification behavior.
 
 Actions:
+
 - Added root auth-based redirect, login page/action, protected layout, sign-out action, company list page, company detail page, request list, admin create form, admin status form, and viewer read-only presentation.
 - Added company and service-request query/schema/type modules using the authenticated cookie-bound Supabase server client only.
 - Server Actions call `auth.getClaims()` independently, Zod-parse form input, write through the authenticated client, and revalidate the affected company path after success.
 - No migrations, grants, RLS policies, seed identities, or invoice behavior were changed.
 
 Implemented routes:
+
 ```text
 / -> redirects authenticated users to /companies and unauthenticated users to /login
 /login -> email/password sign-in
@@ -227,6 +302,7 @@ Implemented routes:
 ```
 
 Authenticated read and mutation flows:
+
 ```text
 Company list: company_members filtered by current claims.sub, joined to companies, with RLS still authoritative.
 Company detail: UUID validation, visible company lookup, self membership lookup, service_requests filtered by company_id newest first.
@@ -235,6 +311,7 @@ Update status: companyId UUID + requestId UUID + allowed status enum; update onl
 ```
 
 Security review:
+
 - Normal app pages/actions/components import `src/lib/supabase/server.ts`, not `src/lib/supabase/admin.ts`.
 - `rg -n "supabase/admin|getSupabaseAdminClient|SUPABASE_SERVICE_ROLE_KEY" src/app src/components src/features src/lib/auth` returned no matches.
 - UI role checks are presentation-only. PostgreSQL grants and RLS remain the authorization boundary.
@@ -242,6 +319,7 @@ Security review:
 - User-facing action errors are generic and do not expose raw PostgreSQL messages.
 
 Browser smoke status:
+
 - Local dev-server launch required approval because sandboxed `Start-Process` was denied.
 - After approved launch, the `agent-browser` CLI was not available on PATH and the Node REPL browser fallback failed with a tool metadata error, so automated browser smoke was not completed in this run.
 - Exact manual smoke steps were recorded in `evidence/task03-manual-smoke.txt`.
@@ -250,9 +328,11 @@ Browser smoke status:
 ## Task 04 invoice sync - 2026-07-12
 
 Prompt/task:
+
 - Execute `tasks/04-invoice-sync.md` after Task 03, preserving the existing invoices table and trusted `public.sync_invoices(jsonb)` function unless a reproducible defect was found.
 
 Actions:
+
 - Added `GET /api/mock-erp/invoices` to serve the canonical fixture unchanged.
 - Added fixture loading, Zod runtime ERP envelope/invoice validation, at-most-two-decimal amount validation, deterministic duplicate reduction, equal-timestamp conflict rejection, and a testable sync service.
 - Replaced placeholder `sync:invoices` and `verify:sync` scripts with real trusted service-role CLI paths that call the existing database RPC.
@@ -260,6 +340,7 @@ Actions:
 - Wrote sanitized sync evidence to `evidence/sync-run-1.txt`, `evidence/sync-run-2.txt`, and `evidence/sync-edge-cases.txt`.
 
 Security/data review:
+
 - Invoice identity remains `(source, external_id)`.
 - The existing database function remains the transaction boundary and enforces strictly-newer `source_updated_at` updates.
 - Payload order is not used as a winner; equal timestamp with conflicting business data rejects the batch.
@@ -268,4 +349,67 @@ Security/data review:
 - Privileged credentials are loaded only in trusted scripts; no public privileged sync HTTP endpoint or invoice UI was added.
 
 Important correction:
+
 - One attempted parallel run of `npm run sync:invoices` and `npm run verify:sync` made the verifier's reset-first assertion observe rows inserted by the concurrent standalone sync, producing a false affected=0 first-run failure. The commands were rerun sequentially and passed; do not run those two sync commands concurrently against the same `mock-erp` source during verification.
+
+## Task 05 adversarial release audit - 2026-07-12
+
+Prompt/task:
+
+- Execute `tasks/05-adversarial-release-audit.md` as a review-only first pass before making final release changes.
+- Inspect the complete source-of-truth set, migrations, Supabase clients, protected routes, Server Actions, seed/sync/verification scripts, tests, evidence, README/NOTES state, tracked inventory, Git diff, and secret exposure risk.
+
+Read-only audit findings:
+
+- Critical: none.
+- High: `scripts/check-secrets.ts` was still a placeholder and could pass without scanning.
+- High: the required root `README.md` was absent.
+- High: `NOTES.md` still contained incomplete release claims/placeholders.
+- Medium: `evidence/full-validation.txt` and `evidence/secret-scan.txt` were missing.
+- No finding was identified for cross-company exposure, viewer writes, membership self-promotion, recursive RLS, privileged-client use in normal paths, unvalidated Server Actions, existence leaks, invoice duplication, stale rollback, payload-order dependence, equal-timestamp conflict handling, partial writes, fuzzy matching, sync-function exposure, or seed repeatability.
+
+Accepted remediation:
+
+- Replaced the placeholder secret scan with a real tracked-file and relevant Git-history scanner that redacts findings and fails non-zero on detected secret-like values.
+- Added regression coverage proving a fake secret fails, empty `.env.example` placeholders pass, and sensitive values are not printed.
+- Added a root `README.md` covering fresh clone, environment setup, hosted Supabase migrations, repeatable seed, development, RLS verification, invoice sync, full validation, and known limitations.
+- Completed `NOTES.md` with actual prompts, AI mistake/correction, RLS proof, sync proof, time-box disclosure, escalation question, and remaining work.
+- Added sanitized `evidence/secret-scan.txt` and `evidence/full-validation.txt`.
+- Updated `docs/TRACEABILITY.md` and the active ExecPlan.
+
+Final release validation contract:
+
+```text
+npm run lint
+npm run typecheck
+npm test
+npm run build
+npm run verify:rls
+npm run verify:sync
+npm run check:secrets
+git diff --check
+```
+
+Evidence:
+
+- `evidence/full-validation.txt`
+- `evidence/secret-scan.txt`
+- `evidence/rls-verification.txt`
+- `evidence/sync-run-1.txt`
+- `evidence/sync-run-2.txt`
+- `evidence/sync-edge-cases.txt`
+- `evidence/task03-manual-smoke.txt`
+
+Release conclusion:
+
+- No Critical security or data-integrity defect was identified in the final audit.
+- Normal application paths remain user-scoped and RLS-protected.
+- Trusted seed and invoice-sync paths remain server-only.
+- The remaining limitations are explicitly documented rather than hidden.
+
+## Submission and bonus status
+
+- Vercel deployment: completed; the final public URL should be linked from `README.md` and the submission email.
+- Automated testing bonus: completed with Vitest. Task 04 reported 4 test files and 14 passing tests before the final release-gate regression additions.
+- Browser demonstration: manual two-user smoke was completed and recorded. A short screen recording remains optional.
+- Playwright: not required because the assessment accepts Vitest or Playwright; it was intentionally not added late in the time-boxed implementation.
