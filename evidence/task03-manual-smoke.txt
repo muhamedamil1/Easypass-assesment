@@ -37,3 +37,33 @@ Viewer account smoke:
 13. Navigate directly to `/companies/33333333-3333-4333-8333-333333333333`.
 14. Confirm the page shows a generic not-found/unavailable result and does not show Marina's name or request title.
 15. Sign out and confirm `/login` is shown.
+
+
+Task 03 manual smoke
+Date: 2026-07-12
+Environment: local Next.js + hosted Supabase
+
+Admin account
+PASS - login succeeded
+PASS - Falcon visible
+PASS - Oasis and Marina hidden
+PASS - request creation succeeded
+PASS - status update succeeded
+PASS - direct Oasis URL exposed no data
+PASS - sign-out succeeded
+
+Viewer/Oasis-admin account
+PASS - login succeeded
+PASS - Falcon and Oasis visible
+PASS - Marina hidden
+PASS - Falcon rendered read-only
+PASS - Oasis request creation succeeded
+PASS - Oasis status update succeeded
+PASS - direct Marina URL exposed no data
+PASS - sign-out succeeded
+
+Validation
+PASS - empty title rejected
+PASS - invalid UUID returned not found
+PASS - no browser console errors
+PASS - no secrets or raw database errors exposed
