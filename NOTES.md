@@ -143,3 +143,60 @@ Limitations:
 - RLS, seed data, auth UI, service requests, invoice sync, real RLS/sync verification, and final secret scan remain unimplemented. Placeholder script success is not acceptance proof.
 - npm reported 2 moderate audit findings after dependency installation.
 - `npm ls --depth=0` still reports optional native/wasm packages such as `@emnapi/runtime` as extraneous in `node_modules`; no manual lockfile or install-tree cleanup was performed.
+
+## Task 02 database/RLS - 2026-07-12
+
+Prompt/task:
+- Execute `tasks/02-database-rls-and-seed.md` after Task 01, using the hosted Supabase project configured through ignored `.env.local`.
+- Continue after `SUPABASE_DB_URL` was added locally, without printing or storing the connection string.
+
+Actions:
+- Added four ordered migrations for enums, companies, memberships, service requests, invoices, constraints, indexes, timestamp trigger, private RLS helpers, grants, policies, and trusted `public.sync_invoices(jsonb)` execute boundary.
+- Added repeatable `scripts/seed.ts` using script-local Supabase clients and ignored env values.
+- Added real `scripts/verify-rls.ts` using authenticated publishable-key sessions for authorization assertions.
+- Wrote sanitized RLS evidence to `evidence/rls-verification.txt`.
+
+Migration application:
+- Confirmed `SUPABASE_DB_URL` was present, nonempty, and Postgres-shaped without displaying it.
+- A first malformed `psql` argument ordering connected but ignored migration file arguments; a sanitized schema check showed 0 required tables, so it was not treated as applied.
+- A second path-resolution attempt stopped before SQL execution because the filename set was wrong for the actual timestamped files.
+- Applied successfully in this order:
+  - `supabase/migrations/20260712130000_extensions_types_tables.sql`
+  - `supabase/migrations/20260712130100_functions_triggers_indexes.sql`
+  - `supabase/migrations/20260712130200_grants_and_rls.sql`
+  - `supabase/migrations/20260712130300_invoice_sync_function.sql`
+- Sanitized schema check after migration found all 4 required public tables.
+
+Seeded setup:
+```text
+Users: admin@easypass.test, viewer@easypass.test
+Companies: Falcon Trading LLC, Oasis Foods FZE, Marina Tech DMCC
+Memberships: admin=Falcon admin; viewer=Falcon viewer, Oasis admin; Marina has no members
+Requests: Falcon=2, Oasis=1, Marina=1
+Passwords/tokens/connection strings were not logged.
+```
+
+RLS verification:
+```text
+Command: npm run verify:rls
+Result: PASS (all RLS assertions passed)
+Evidence: evidence/rls-verification.txt
+Authorization proof used authenticated test-user clients. The privileged client was used only for fixed verification-row cleanup.
+```
+
+Important RLS assertions passed:
+- Admin lists Falcon only and cannot read Oasis requests by known ID.
+- Viewer lists Falcon and Oasis, reads Falcon requests, but cannot insert or update Falcon requests.
+- Viewer as Oasis admin can insert and update Oasis request status.
+- Neither user reads Marina company or a known Marina request ID.
+- Users cannot insert, update, delete, or self-promote memberships.
+- Users cannot update immutable request columns or delete requests.
+- Authenticated users cannot select invoices.
+
+Task 02 omissions by design:
+- No login/sign-out pages.
+- No protected company pages.
+- No service-request UI or Server Actions.
+- No mock ERP route.
+- No invoice sync orchestration, deduplication service, or invoice UI.
+- No optional features.

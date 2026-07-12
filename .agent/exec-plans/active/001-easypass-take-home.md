@@ -66,7 +66,7 @@ Actual active time so far: about 79 minutes
 
 - [x] Task 00 - Inspect and validate plan/traceability.
 - [x] Task 01 - Foundation, dependencies, environment, Supabase clients.
-- [ ] Task 02 - Schema, grants, RLS, seed, RLS verification.
+- [x] Task 02 - Schema, grants, RLS, seed, RLS verification.
 - [ ] Task 03 - Authentication and request application.
 - [ ] Task 04 - Mock ERP and invoice synchronization.
 - [ ] Task 05 - Adversarial release audit, documentation, and evidence.
@@ -100,7 +100,11 @@ Record actual findings here. Do not invent an AI mistake in advance.
 - `npm ls --depth=0` still reports optional native/wasm packages such as `@emnapi/runtime` as extraneous in `node_modules` after npm install. The lockfile and package metadata were updated only through npm; no manual cleanup was done because this appears to be a local install-tree artifact and npm also warned about an EPERM cleanup path under `@unrs/resolver-binding-wasm32-wasi`.
 - Task 01 validation: `npm run lint` passed; `npm run typecheck` passed; `npm test` initially failed with sandbox `spawn EPERM` then passed with approval; `npm run build` initially failed with sandbox/OneDrive `.next` unlink `EPERM` then passed with approval; `npm run verify:rls`, `npm run verify:sync`, and `npm run check:secrets` initially hit `tsx`/esbuild `spawn EPERM` then placeholder commands passed with approval; `git diff --check` passed.
 - Task 01 added `!.env.example` to `.gitignore` so the required placeholder env file is commit-visible while real `.env*` files remain ignored.
-
+- Task 02 completed on 2026-07-12T14:28:35+05:30. Added four ordered Supabase migrations using timestamped filenames: `20260712130000_extensions_types_tables.sql`, `20260712130100_functions_triggers_indexes.sql`, `20260712130200_grants_and_rls.sql`, and `20260712130300_invoice_sync_function.sql`.
+- The migration application used `psql` against ignored `SUPABASE_DB_URL`. A first malformed `psql` argument order connected but ignored file options; a sanitized schema check showed 0 required tables, so it was not treated as applied. A second path-resolution attempt also stopped before SQL execution. The corrected absolute-path invocation applied all four migrations successfully, followed by a sanitized schema check showing all 4 required public tables.
+- Task 02 seed uses script-local Supabase clients and explicitly loads ignored `.env.local`. It seeds `admin@easypass.test` and `viewer@easypass.test` without logging passwords, plus Falcon Trading LLC, Oasis Foods FZE, Marina Tech DMCC, memberships, and deterministic service requests. `npm run seed` passed twice.
+- `npm run verify:rls` is no longer a placeholder. It signs in with authenticated publishable-key clients for both seed users; the privileged client is used only to delete fixed verification rows before/after assertions. All RLS assertions passed, including cross-company denial, viewer write denial, membership write denial, immutable request-column denial, service-request delete denial, and invoice select denial.
+- Task 02 intentionally did not implement auth pages, protected company pages, request Server Actions, mock ERP route, invoice sync orchestration, invoice UI, optional features, or final secret scanning.
 ## Milestones
 
 ### Task 00 - Inspection and plan confirmation
@@ -241,9 +245,9 @@ Manual:
 
 Complete during development:
 
-- Delivered behavior: Task 01 foundation, env validation boundaries, Supabase server/proxy/admin clients, required scripts, test runner, and temporary compiling root page are in place.
-- Evidence paths: `evidence/bootstrap-foundation.txt`, `evidence/foundation-validation.txt`
+- Delivered behavior: Task 01 foundation, env validation boundaries, Supabase server/proxy/admin clients, required scripts, test runner, and temporary compiling root page are in place. Task 02 database schema, grants, RLS, seed, and authenticated RLS proof are also in place.
+- Evidence paths: `evidence/bootstrap-foundation.txt`, `evidence/foundation-validation.txt`, `evidence/rls-verification.txt`
 - AI error caught: None requiring a contract change. The local tool editor failed under the Windows sandbox, so the same planned edits were applied with a repository-local script; validation caught no behavior drift.
 - Durable correction: Keep using npm for lockfile/dependency changes; do not manually clean extraneous optional native packages from `node_modules`.
-- Known limitations: Database/RLS/seed, auth UI, service-request behavior, invoice sync, real RLS verification, real sync verification, and final secret scan remain later tasks. `verify:rls`, `verify:sync`, and `check:secrets` are placeholders only. npm audit reports 2 moderate findings.
+- Known limitations: Auth UI, service-request application behavior, invoice sync, real sync verification, and final secret scan remain later tasks. `verify:sync` and `check:secrets` are placeholders only. npm audit reports 2 moderate findings.
 - Production escalation:

@@ -1,0 +1,28 @@
+RLS verification for EasyPass Task 02
+Authorization clients: authenticated publishable-key sessions only
+Privileged client use: verification row cleanup only
+PASS admin lists Falcon only
+PASS admin reads Falcon requests
+PASS admin cannot read Oasis requests by known ID
+PASS viewer lists Falcon and Oasis only
+PASS viewer reads Falcon and Oasis memberships
+PASS viewer reads Falcon requests
+PASS viewer insert into Falcon fails
+PASS viewer status update in Falcon fails without side effect
+PASS admin insert into Falcon succeeds
+PASS admin status update in Falcon succeeds
+PASS viewer as Oasis admin inserts into Oasis
+PASS viewer as Oasis admin updates Oasis status
+PASS neither user reads Marina company
+PASS neither user reads Marina request by known ID
+PASS user insert on company_members fails
+PASS user cannot promote membership role
+PASS user delete on company_members fails
+PASS user cannot update request title
+PASS user cannot update request company_id
+PASS user cannot update request created_by
+PASS user cannot update request created_at
+PASS user cannot update request updated_at
+PASS user delete on service_requests fails
+PASS authenticated users cannot select invoices
+Result: PASS (all RLS assertions passed)
